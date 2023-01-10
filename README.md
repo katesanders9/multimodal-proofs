@@ -29,13 +29,9 @@ multimodal-proofs
 |   └───utils
 |       |    __init__.py
 |       |    hf_utils.py
-|       |    pattern_utils.py
-|       |    print_utils.py
 |       |    random_mask.py
 |       |    read_data.py
-|       |    retrieval_utils.py
-|       |    sbert_utils.py
-|       |    text_utils.py
+|       |    utils.py
 |
 └───tools
     |   run_engine.py
