@@ -1,18 +1,18 @@
 ''' From Nathaniel's NELLIE codebase.'''
 
+import re
 import logging
+import numpy as np
+import pandas as pd
 from itertools import product
 from typing import Optional, List
 from dataclasses import dataclass, field
 
-import numpy as np
-import pandas as pd
 from transformers import (
     AutoConfig,
     AutoModelForSeq2SeqLM,
     AutoTokenizer, AutoModelForSequenceClassification,
 )
-import re
 
 from src.utils import flatten
 from src.utils.random_mask import random_mask, MASK
@@ -202,9 +202,6 @@ class DataTrainingArguments:
     )
 
     def __post_init__(self):
-        # if self.train_files is None and self.validation_files is None:
-        #     raise ValueError("Need a training/validation file.")
-
         if self.val_max_target_length is None:
             self.val_max_target_length = self.max_target_length
 
@@ -227,12 +224,10 @@ class GenerationArguments:
                     "to the `num_beams` value of the model configuration."
         },
     )
-    # seed: int = field(default=42, metadata={"help": "Random seed that will be set at the beginning of generation."})
     batch_size: int = field(default=16)
     top_p: Optional[float] = field(default=0.95)
     top_k: Optional[int] = field(default=None)
     num_candidates: Optional[int] = field(default=340)
-    # candidate_gpu_cap : Optional[int] = field(default=600)
     filter_model_path: Optional[str] = field(
         default=None,
         metadata={
@@ -291,7 +286,6 @@ def auto_load_model(model_args=None, path=None):
             config=config,
             cache_dir=model_args.cache_dir,
             revision=model_args.model_revision,
-            # max_memory=max_memory,
             use_auth_token=True if model_args.use_auth_token else None,
         )
 

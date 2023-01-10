@@ -1,8 +1,7 @@
 ''' From Nathaniel's NELLIE codebase.'''
 
 from .read_data import *
-from .print_utils import *
-from .text_utils import *
+from .utils import *
 
 DEFAULT_MAX_DEPTH=4
 DEFAULT_MAX_PROOFS=8

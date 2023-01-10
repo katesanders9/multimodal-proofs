@@ -22,7 +22,7 @@ from src.dataset import query_from_hypothesis
 from src.lm_engine import LMEngine
 from src.rule_generators import TemplateConditionedRuleGenerator
 from src.utils.hf_utils import auto_load_model, auto_load_classification_model
-from src.utils.retrieval_utils import RetrievalEncoder
+from src.utils.utils import RetrievalEncoder
 from src.rule_filters import EVClassificationFilter, SBERTSimilarityFilter, \
     CrossEncoderEntailmentFilter, CrossEncoderEVFilter, RegexEVFilter, ClassificationEntailmentFilter
 

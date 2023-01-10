@@ -15,7 +15,7 @@ from problog.logic import Term, list2term, make_safe, term2str, Constant, unquot
 
 from src.rule_filters import EntailmentScorer
 from src.utils import read_sentences, normalize_text, flatten
-from src.utils.retrieval_utils import RetrievalEncoder, SBERTRetrievalEncoder
+from src.utils.utils import RetrievalEncoder, SBERTRetrievalEncoder
 
 logger = logging.getLogger(__name__)
 

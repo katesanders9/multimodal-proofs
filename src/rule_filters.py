@@ -13,8 +13,7 @@ from transformers import (
 )
 
 from src.utils.hf_utils import EV_PROMPT, MNLI_PROMPT, auto_load_model
-from src.utils.pattern_utils import InferencePattern
-from src.utils.sbert_utils import SBERT, ENTAILMENT_CROSS_ENCODER, EV_CROSS_ENCODER, EV_UNIFICATION_ENCODER
+from src.utils.utils import InferencePattern, SBERT, ENTAILMENT_CROSS_ENCODER, EV_CROSS_ENCODER, EV_UNIFICATION_ENCODER
 
 
 class RuleFilter(torch.nn.Module):
