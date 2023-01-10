@@ -1,10 +1,11 @@
-from deepproblog.engines import Engine
-from deepproblog.engines.exact_engine import ExactEngine, get_predicate, EXTERN
+''' From Nathaniel's NELLIE codebase.'''
+
 from problog.extern import problog_export
 from problog.logic import Term, Clause, term2list
 from problog.program import SimpleProgram
-
 from deepproblog.network import Network
+from deepproblog.engines import Engine
+from deepproblog.engines.exact_engine import ExactEngine, get_predicate, EXTERN
 
 
 def get_det_predicate(net: Network, engine: Engine):

@@ -1,4 +1,9 @@
+''' From Nathaniel's NELLIE codebase. Contains dataset structuring classes and methods.'''
+
 from typing import List
+from src.utils import DEFAULT_MAX_DEPTH, flatten, DEFAULT_MAX_PROOFS, normalize_text
+
+
 def install_and_import(package):
     import importlib
     try:
@@ -27,36 +32,6 @@ if import_check('problog'):
     except:
         print("failed to import problog items!!")
 
-from src.utils import DEFAULT_MAX_DEPTH, flatten, read_jsonl, DEFAULT_MAX_PROOFS, normalize_text
-import pandas as pd
-import os
-import numpy as np
-from datasets import load_dataset
-
-
-class ARC:
-    arc = None
-
-    @staticmethod
-    def load_arc_dataset():
-        if ARC.arc is None:
-            exs = []
-            for difficulty in ['easy', 'challenge']:
-                arc_dset = load_dataset('ai2_arc', f'ARC-{difficulty.title()}')
-                for split in ['train', 'test', 'validation']:
-                    for ex in arc_dset[split]:
-                        for choice, label in zip(ex['choices']['text'], ex['choices']['label']):
-                            exs.append(dict(
-                                arc_split=split,
-                                id=ex['id'],
-                                choice=choice,
-                                label=label,
-                                correct=label == ex['answerKey'],
-                                question=ex['question'],
-                                difficulty=difficulty
-                            ))
-            ARC.arc = pd.DataFrame(exs)
-        return ARC.arc
 
 
 
@@ -176,141 +151,10 @@ class QuestionDatasetReader:
             return question_dataset.to_hypothesis_dataset()
 
 
-class WorldTreeDatasetReader(QuestionDatasetReader):
-    def __init__(self, worldtree_data_path='data/worldtree', arc_path='data/ARC', use_gpt_declaratives=True):
-        super().__init__()
-
-        # read and reformat opt-declarativized eb hypotheses
-        wt_declarativized = pd.read_csv(
-            # os.path.join(worldtree_data_path, "worldtree_gpt-j-6B_declarativized.tsv"),
-            os.path.join(worldtree_data_path, "worldtree_t5_combined_eb_declarativized.tsv"),
-            sep='\t', index_col=0
-        ).drop_duplicates(subset=['id', 'label'])
-        _eb = []
-        for i, subdf in wt_declarativized.groupby('id'):
-            newrow = dict()
-            for j, (_, row) in enumerate(subdf.iterrows()):
-                newrow[f'key{j + 1}'] = row['label']
-                newrow[f'answer{j + 1}'] = row['declarativized'].strip()
-            for k in ['split', 'question']:
-                newrow[k] = subdf[k].iloc[0]
-            newrow['id'] = i
-            _eb.append(newrow)
-
-        wt_declarativized = pd.DataFrame(_eb)
-
-        # TODO worldtree gpt2 declarativized is split by ARC, not worldtree
-        arc_df = pd.read_csv(os.path.join(arc_path, "ARC-ALL+declaratives-QA2D.csv"),
-                             encoding='unicode_escape', engine='python')
-
-        wt_tables = []
-        for split in ['train', 'dev', 'test']:
-            _df = pd.read_csv(f'{worldtree_data_path}/questions/questions.{split}.tsv', sep='\t')
-            if 'QuestionID' not in _df.columns: _df['QuestionID'] = _df['questionID']
-            _df['split'] = split
-            _df = _df.merge(arc_df, left_on='QuestionID', right_on='questionID', suffixes=('', '_y'))
-            if 'AnswerKey' not in _df.columns:
-                _df["AnswerKey"] = _df["AnswerKey_x"]
-            if 'question' not in _df.columns:
-                _df["question"] = _df["question_x"]
-
-            if split == 'test' and use_gpt_declaratives:
-                _opt_decl_df = _df[
-                    [c for c in _df.columns if (c == 'id') or (c not in wt_declarativized.columns)]
-                ].merge(wt_declarativized, how='left', left_on='QuestionID', right_on='id').fillna(np.nan).replace(
-                    [np.nan], [None])
-                wt_tables.append(_opt_decl_df)
-            else:
-                wt_tables.append(_df)
-
-            # wt_tables.append(_df)
-        self.question_df = pd.concat(wt_tables)
-
-
-class EntailmentbankDatasetReader(QuestionDatasetReader):
-    def __init__(self, entailmentbank_data_path='data/entailmentbank', arc_path='data/ARC', use_gpt_declaratives=True):
-        super().__init__()
-        arc_df = pd.read_csv(os.path.join(arc_path, "ARC-ALL+declaratives-QA2D.csv"),
-                             encoding='unicode_escape', engine='python')
-
-        # read and reformat opt-declarativized eb hypotheses
-        eb_declarativized = pd.read_csv(
-            # os.path.join(entailmentbank_data_path, "entailmentbank_gpt-j-6B_declarativized.tsv"),
-            os.path.join(entailmentbank_data_path, "entailmentbank_t5_combined_eb_declarativized.tsv"),
-            sep='\t', index_col=0
-        ).drop_duplicates(subset=['id', 'label'])
-        _eb = []
-        for i, subdf in eb_declarativized.groupby('id'):
-            newrow = dict()
-            for j, (_, row) in enumerate(subdf.iterrows()):
-                newrow[f'key{j + 1}'] = row['label']
-                newrow[f'answer{j + 1}'] = row['declarativized'].strip()
-            for k in ['split', 'question']:
-                newrow[k] = subdf[k].iloc[0]
-            newrow['id'] = i
-            _eb.append(newrow)
-
-        eb_declarativized = pd.DataFrame(_eb)
-
-        eb_tables = []
-        for split in ['train', 'dev', 'test']:
-            _df = pd.DataFrame(read_jsonl(f"{entailmentbank_data_path}/dataset/task_1/{split}.jsonl"))
-            _df['split'] = split
-
-            _df = _df.merge(arc_df, left_on='id', right_on='questionID', suffixes=('', '_y'))
-
-            if 'AnswerKey' not in _df.columns:
-                _df["AnswerKey"] = _df["AnswerKey_x"]
-            if 'question' not in _df.columns:
-                _df["question"] = _df["question_x"]
-
-            if split != 'train' and use_gpt_declaratives:
-                _opt_decl_df = _df[
-                    [c for c in _df.columns if (c == 'id') or (c not in eb_declarativized.columns)]
-                ].merge(eb_declarativized, how='left', on='id').fillna(np.nan).replace([np.nan], [None])
-                eb_tables.append(_opt_decl_df)
-            else:
-                eb_tables.append(_df)
-        self.question_df = pd.concat(eb_tables)
-
-
-class OBQADatasetReader(QuestionDatasetReader):
-
-    def __init__(self, obqa_path='data/openbookqa'):
-        super().__init__()
-
-        self.df = pd.read_csv(
-            os.path.join(obqa_path, "openbookqa_gpt-j-6B_declarativized.tsv"), sep='\t', index_col=0
-        ).drop_duplicates(subset=['id', 'label'])
-
-    def make_dataset(self, split, as_questions=False):
-        sdf = self.df.query(f"split == '{split}'")
-
-        def _get_question(subdf):
-            hypotheses = [
-                Hypothesis(
-                    normalize_text(row[f"declarativized"]),
-                    row['id'] + f"_{i}",
-                    float(row['correct']),
-                    normalize_text(row['question'])
-                )
-                for i, (_, row) in enumerate(subdf.iterrows())
-            ]
-            return Question(hypotheses,
-                            question_id=subdf.id.iloc[0],
-                            correct_idx=[i for (i, h) in enumerate(hypotheses) if h.label][0],
-                            difficulty=0)
-
-        question_dataset = QuestionDataset(sdf.groupby('id').apply(_get_question).to_list())
-
-        if as_questions:
-            return question_dataset
-        else:
-            return question_dataset.to_hypothesis_dataset()
 
 
 if __name__ == "__main__":
-    reader = WorldTreeDatasetReader()
+    reader = QuestionDatasetReader()
     dataset: QuestionDataset = reader.make_dataset('dev', as_questions=True)
     from IPython import embed
 

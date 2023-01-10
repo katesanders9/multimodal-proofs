@@ -1,29 +1,31 @@
-import sys
-from collections import defaultdict
-from typing import List
+''' From Nathaniel's NELLIE codebase. Defines the main NELLIE class for tree generation.'''
 
+import sys
 import logging
-import sys
-from typing import List
 import copy
-
+import graphviz
+import textwrap
 import torch
+from nltk import Tree
+from typing import List
+from collections import defaultdict
+
 from deepproblog.model import Model
 from deepproblog.network import Network
 from deepproblog.query import Query
 from deepproblog.semiring import Result
-from nltk import Tree
 from problog.extern import problog_export
 from problog.logic import term2list, Term, unquote, term2str
+from problog.library.record import recorded
 
 from src.dataset import query_from_hypothesis
-from src.fact_retrieval import WorldTreeFactRetrievalEngine, SentenceFactRetrievalEngine
 from src.lm_engine import LMEngine
-from src.rule_filters import EVClassificationFilter, SBERTSimilarityFilter, Seq2SeqEntailmentFilter, \
-    CrossEncoderEntailmentFilter, CrossEncoderEVFilter, SBERTEVScorer, RegexEVFilter, ClassificationEntailmentFilter
 from src.rule_generators import TemplateConditionedRuleGenerator
 from src.utils.hf_utils import auto_load_model, auto_load_classification_model
 from src.utils.retrieval_utils import RetrievalEncoder
+from src.rule_filters import EVClassificationFilter, SBERTSimilarityFilter, \
+    CrossEncoderEntailmentFilter, CrossEncoderEVFilter, RegexEVFilter, ClassificationEntailmentFilter
+
 
 logging.basicConfig(
     datefmt="%m/%d/%Y %H:%M:%S",
@@ -45,21 +47,16 @@ class NELLIE:
         retrieval_encoder = RetrievalEncoder.build_encoder("sbert_support_fact")
 
         logger.info("loading Entailment model")
-        # ots_t5, ots_t5_tokenizer = auto_load_model(path='t5-large')
-        # t5_entailment_filter = Seq2SeqEntailmentFilter(model=ots_t5, tokenizer=ots_t5_tokenizer, batch_size=16)
-        # t5_entailment_filter_network = Network(t5_entailment_filter, 't5_entailment_model')
-
         deberta_model_name = "MoritzLaurer/DeBERTa-v3-large-mnli-fever-anli-ling-wanli"
         deberta_nli_model, deberta_nli_tokenizer = auto_load_classification_model(deberta_model_name)
         deberta_entailment_filter = ClassificationEntailmentFilter(model=deberta_nli_model,
                                                                    tokenizer=deberta_nli_tokenizer,
                                                                    batch_size=128)
-
         ce_entailment_filter = CrossEncoderEntailmentFilter()
-        # ce_entailment_filter_network = Network(ce_entailment_filter, 'ce_entailment_model')
 
         logger.info("loading DRG model")
         drg_model, drg_tokenizer = auto_load_model(path=args.drg_model_path)
+
         logger.info("loading EV model")
         ev_model, ev_tokenizer = auto_load_model(path=args.ev_model_path)
 
@@ -79,8 +76,6 @@ class NELLIE:
             "do_sample": True
         }
 
-        # drg = RuleGenerator(model=drg_model, tokenizer=drg_tokenizer, gen_kwargs=gen_kwargs, filters=[ev_filter, sbert_filter])
-        # sbert_unification_scorer = SBERTEVScorer()
         drg_args = dict(model=drg_model, tokenizer=drg_tokenizer,
                         gen_kwargs=gen_kwargs, use_templates=args.use_generator_templates,
                         outputs_per_template=args.outputs_per_template,
@@ -100,39 +95,11 @@ class NELLIE:
         self.drg = drg
         drg_network = Network(drg, "drg_model")
 
-        logger.info(f"loading WorldTree FAISS index from {args.worldtree_index_path}")
-        wt_fact_retriever = WorldTreeFactRetrievalEngine.from_file(
-            args.worldtree_index_path, read_data=True,
-            model=retrieval_encoder,
-            allow_first_fact_retrieval=args.use_generator_retrieval,
-            max_support_facts=args.max_retrieval_set_size,
-            entailment_filters=[ce_entailment_filter,
-                                deberta_entailment_filter],
-            scorer=ce_entailment_filter if args.use_single_h_entailment_scorer else None)
-
-        self.retriever = wt_fact_retriever
-
-        # wt_fact_retriever.index_to_gpu()
-        wt_fact_retriever_network = Network(wt_fact_retriever, 'wt_retrieval_model')
+        # load any FAISS indices here
 
         networks = [drg_network,
-                    wt_fact_retriever_network,
-                    # entailment_filter_network
                     ]
 
-        if args.use_eqasc_retrieval:
-            logger.info(f"loading EQASC FAISS index from {args.eqasc_index_path}")
-            eqasc_fact_retriever = SentenceFactRetrievalEngine.from_file(args.eqasc_index_path, read_data=True,
-                                                                         model=retrieval_encoder,
-                                                                         entailment_filters=[ce_entailment_filter,
-                                                                                             deberta_entailment_filter])
-            eqasc_fact_retriever_network = Network(eqasc_fact_retriever, 'eqasc_retrieval_model')
-            networks.append(eqasc_fact_retriever_network)
-            breakpoint()
-            problog_program += """
-        using_eqasc(1).
-        nn(eqasc_retrieval_model, [HypothesisList, Mode, Threshold], Matches) :: eqasc_weak_retrieval(HypothesisList, Mode, Threshold, Matches).
-        """
         if args.one_proof_on_recursions:
             problog_program += """
             max_1_on_recursive_calls(1).
@@ -154,7 +121,6 @@ class NELLIE:
                 m.cuda(1)
 
             for m in [deberta_nli_model,
-                      # ots_t5,
                       ev_model
                       ]:
                 m.eval()
@@ -165,22 +131,17 @@ class NELLIE:
                 m.eval()
                 m.cuda(1)
 
-            for m in [deberta_nli_model,
-                      # ots_t5
-                      ]:
+            for m in [deberta_nli_model]:
                 m.eval()
                 m.cuda(0)
 
-            for m in [
-                # ev_model
-            ]:
+            for m in [ev_model]:
                 m.eval()
                 m.cuda(2)
 
         model = Model(program_string=problog_program, networks=networks, load=False)
         self.lm_engine = LMEngine(model)
         model.set_engine(self.lm_engine, cache=True)
-
         self.model = model
 
     def reload_drg(self, **kwargs):
@@ -236,16 +197,10 @@ class NELLIE:
         self.drg.gen_kwargs = backup_gkwargs
         return preds, scores
 
-    # self.solve([Query(Term.from_string("recorded('plants use chlorophyll to produce sugar', _, _)"))])
     def solve(self, queries: List[Query]) -> List[Result]:
         return self.model.solve(queries)
 
     def create_dfs_tree(self, h_str, save_render_path=None):
-        import graphviz
-        import textwrap
-        from problog.library.record import recorded
-
-        # term = Term.from_string(term_str)
         db = problog_export.database
         dot = graphviz.Graph()
         dot.attr(rankdir="LR", splines="ortho")
@@ -291,12 +246,10 @@ class NELLIE:
         recursions = defaultdict(int)
 
         def _recursive_construct(_hstr, rank):
-            # print(_hstr, rank)
             matches = _get_matches(f"drg_link('{_hstr}', _,_,_)")
             for [h, f1, f2, sc] in matches:
                 ndid[0] += 1
                 recursions[rank] += 1
-                # print(h, f1, f2, sc)
                 sc = float(sc)
                 nid = 'n' + str(ndid[0])
                 dot.node(nid, label=f"{sc:.2f}", shape='diamond',
@@ -308,11 +261,6 @@ class NELLIE:
                     _add_node(f1, rank=f"{rank + 2}", color=_get_color(f1))
                     seen_nodes.add(f1)
                     _recursive_construct(f1, rank=rank + 2)
-                    # dot.node(nid+"_1", height="0.01", width="0.01",
-                    #          label="",
-                    #          rank=f"{rank + 1}")
-                    # dot.edge(nid, nid + "_1")
-                    # dot.edge(nid+"_1", f1, weight="10")
                 dot.edge(nid, f1)
 
                 if f2 not in seen_nodes:
@@ -320,11 +268,6 @@ class NELLIE:
                               color=_get_color(f2))
                     seen_nodes.add(f2)
                     _recursive_construct(f2, rank=rank + 2)
-                    # dot.node(nid+"_2", height="0.01", width="0.01",
-                    #          label="",
-                    #          rank=f"{rank + 1}")
-                    # dot.edge(nid, nid + "_2")
-                    # dot.edge(nid+"_2", f2, weight="10")
                 dot.edge(nid, f2, weight="10")
 
         _recursive_construct(h_str, rank=1)

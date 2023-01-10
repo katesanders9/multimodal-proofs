@@ -1,23 +1,21 @@
-import json
+''' From Nathaniel's NELLIE codebase. Defines the main fact retrieval engine class.'''
+
 import logging
 import os
 import time
-from argparse import ArgumentParser
-from glob import glob
-from typing import List, Dict, Optional
-
 import faiss
-import numpy as np
-import pandas as pd
 import torch
+import numpy as np
+from argparse import ArgumentParser
+from typing import List, Dict, Optional
+from traitlets import Int
+
 from problog.extern import problog_export
 from problog.logic import Term, list2term, make_safe, term2str, Constant, unquote, term2list
-from traitlets import Int
 
 from src.rule_filters import EntailmentScorer
 from src.utils import read_sentences, normalize_text, flatten
 from src.utils.retrieval_utils import RetrievalEncoder, SBERTRetrievalEncoder
-from src.utils.worldtree_utils import WorldTreeFact, WT_ID_COL, WorldTree
 
 logger = logging.getLogger(__name__)
 
@@ -95,7 +93,6 @@ class FactRetrievalEngine(torch.nn.Module):
                 ret_i = []  # td
                 for score_ij, idx_ij in zip(scores_i, idx_i):
                     if score_ij < threshold: break
-                    # print(score_ij, idx_ij)
                     ret_i.append((score_ij, idx_ij))
                 self.result_cache[_query_set[qset_idx]] = ret_i
                 retset.append(ret_i)
@@ -213,119 +210,6 @@ class FactRetrievalEngine(torch.nn.Module):
         raise NotImplementedError()
 
 
-class SentenceFactRetrievalEngine(FactRetrievalEngine):
-    def __init__(self, *args, **kwargs):
-        super(SentenceFactRetrievalEngine, self).__init__(*args, **kwargs)
-        if kwargs['data'] is not None and kwargs['index'] is None:
-            self.index_data(self.data)
-
-    def index_data(self, data: List[str], batch_size: int = 64):
-        encoded_data = self.encoder.encode_facts(data, batch_size=batch_size)
-        self.add_to_index(encoded_data)
-
-    def index_data_from_file(self, file, batch_size: int = 64, **kwargs):
-        new_data = []
-        for i, text in enumerate(read_sentences(file, **kwargs)):
-            new_data.append(normalize_text(text))
-            if kwargs['debug'] and i > 10000:
-                break
-        self.data.extend(new_data)
-        self.index_data(new_data, batch_size=batch_size)
-
-    def search(self, *args, **kwargs) -> List[List[Dict]]:
-        search_result = self._search(*args, **kwargs)
-        return [[dict(score=sim_score, id=id, sentence=self[id]) for sim_score, id in search_result_i]
-                for search_result_i in search_result]
-
-
-class WorldTreeFactRetrievalEngine(FactRetrievalEngine):
-    def __init__(self, worldtree_path="data/worldtree/tablestore/v2.1/tables/",
-                 data=None, include_eb_added_facts=False,
-                 fully_unroll_slotfills=False,
-                 **kwargs):
-        super(WorldTreeFactRetrievalEngine, self).__init__(data=data, **kwargs)
-        self.wt_tables = {}
-        self.column_names = ['id', 'table_name', 'sentence']
-        self.include_eb_added_facts = include_eb_added_facts
-        self.fully_unroll_slotfills = fully_unroll_slotfills
-        for f in glob(os.path.join(worldtree_path, '*.tsv')):
-            _df = pd.read_csv(f, sep='\t')
-            if _df.columns[-1].startswith('Unn'): _df = _df[_df.columns[:-1]]
-            self.wt_tables[f.split("/")[-1].split('.')[0]] = _df
-
-        if data is None:
-            self.data = self.get_sentences()
-        if type(self.data) == np.ndarray:
-            self.data = pd.DataFrame(self.data, columns=self.column_names)
-
-        # for gold tree reconstruction
-        self.exclude_list = None
-
-    def id_lookup(self, idstr):
-        for (k, wdf) in self.wt_tables.items():
-            match = wdf[wdf[WT_ID_COL] == idstr]
-            if not match.empty:
-                return k, match.iloc[0, :]
-
-        return None
-
-    def reverse_lookup(self, factstr):
-        matches = self.data.query(f"sentence == '{factstr}'")
-        if matches.shape[0] < 1:
-            # print(f"fact {factstr} not found in factbase!!!")
-            return ''
-        else:
-            return matches.iloc[0].get("id", None)
-
-    def set_exclude_list(self, exclude_list):
-        self.exclude_list = exclude_list
-
-    def clear_exclude_list(self):
-        self.exclude_list = None
-
-    def get_sentences(self, entailmentbank_path="data/entailmentbank"):  # columns: id, table_name, nl
-        ret = []
-        if self.fully_unroll_slotfills:
-            wt = WorldTree()
-            ret = wt.to_lookup_corpus()
-        else:
-            for (tid, table) in self.wt_tables.items():
-                ret.extend(
-                    table.apply(lambda x: (x[WT_ID_COL], tid, WorldTreeFact(None, x).nl), axis=1).tolist()
-                )
-        if self.include_eb_added_facts:
-            eb_supporting_facts = json.load(
-                open(os.path.join(entailmentbank_path, 'supporting_data/worldtree_corpus_sentences_extended.json')))
-            ret.extend(
-                [(k, "ET_addon", normalize_text(v))
-                 for (k, v) in eb_supporting_facts.items()
-                 if "ET_addon" in k]
-            )
-
-        df = pd.DataFrame(ret, columns=self.column_names)
-        # df.set_index('id', inplace=True)
-        return df
-
-    def index_data(self, batch_size: int = 64):
-        encoded_data = self.encoder.encode_facts(self.data['sentence'], batch_size=batch_size)
-        self.add_to_index(encoded_data)
-
-    def index_data_from_file(self, file, batch_size: int = 64, **kwargs):
-        raise NotImplementedError()
-
-    def __getitem__(self, item):
-        return self.data.loc[item, :]
-
-    def search(self, *args, **kwargs) -> List[List[Dict]]:
-        search_result = self._search(*args, **kwargs)
-
-        def _allowed(uuid):
-            return self.exclude_list is None or uuid not in self.exclude_list
-
-        return [[dict(score=sim_score, **dict(self[id])) for sim_score, id in search_result_i
-                 if _allowed(self[id]['id'])]
-                for search_result_i in search_result]
-
 
 if __name__ == "__main__":
     logger = logging.getLogger(__name__)
@@ -350,23 +234,7 @@ if __name__ == "__main__":
         print(engine.data[:10])
         print(engine.index.ntotal)
         print(engine.search(['a hawk uses a beak to hunt']))
-        # embed(user_ns=locals())
         engine.save(f'data/eqasc/{args.encoder_type}_indexed_qasc')
-
-    elif args.data == 'wt':
-        engine = WorldTreeFactRetrievalEngine(encoder_model=encoder, include_eb_added_facts=args.add_eb_facts,
-                                              fully_unroll_slotfills=args.full_unroll_slotfills)
-        engine.index_data()
-        print(engine.data[:10])
-        print(engine.index.ntotal)
-        print(engine.search(['a hawk is a kind of bird']))
-        save_path = f'data/worldtree/{args.encoder_type}_indexed_worldtree'
-        if args.add_eb_facts:
-            save_path += '_extended'
-        if args.full_unroll_slotfills:
-            save_path += '_unrolled'
-        engine.save(save_path)
-        # embed(user_ns=locals())
 
     else:
         raise NotImplementedError()

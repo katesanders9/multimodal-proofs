@@ -3,17 +3,17 @@ import logging
 import os
 import sys
 import time
-from argparse import ArgumentError
-from typing import List
-
 import pandas as pd
+
 from deepproblog.semiring import Result
 from nltk.tree import *
 from problog.logic import term2list, term2str, unquote, is_variable
 from transformers import HfArgumentParser, set_seed
 from tqdm import tqdm
+from argparse import ArgumentError
+from typing import List
 
-from src.dataset import WorldTreeDatasetReader, QuestionDataset, EntailmentbankDatasetReader, Question, \
+from src.dataset import QuestionDataset, EntailmentbankDatasetReader, Question, \
     OBQADatasetReader
 from src.engine import NELLIE
 from src.metrics import compute_qa_metrics
@@ -28,19 +28,13 @@ logger = logging.getLogger(__name__)
 def run_eval(args, generation_args):
     set_seed(args.seed)
 
-    print(args)
-    print(generation_args)
-
     if args.test_set == "entailmentbank":
         reader = EntailmentbankDatasetReader(use_gpt_declaratives=args.use_gpt_declarativizer)
-    elif args.test_set == 'openbookqa':
-        reader = OBQADatasetReader()
     else:
-        assert args.test_set in ['worldtree', 'worldtree_1_0']
-        reader = WorldTreeDatasetReader(use_gpt_declaratives=args.use_gpt_declarativizer, worldtree_data_path=f"data/{args.test_set}")
+        assert args.test_set == 'openbookqa'
+        reader = OBQADatasetReader()
 
     dataset: QuestionDataset = reader.make_dataset(args.split, as_questions=True)
-    # if args.dry_run: breakpoint()
     nellie = NELLIE(args, generation_args)
 
     PREDICATE_MAP = {
@@ -51,16 +45,8 @@ def run_eval(args, generation_args):
     prove_predicate = PREDICATE_MAP.get(args.search_type, None)
     if prove_predicate is None:
         raise ArgumentError(args.search_type, f"search type {args.search_type} does not exist!")
-    # friction = query_model("frictional force between two sticks causes them to increase in temperature", depth=3, time_limit=60)
 
     if args.dry_run:
-        # breakpoint()
-        # from src.utils.worldtree_utils import WorldTree
-        # wt = WorldTree()
-        # print(wt.to_lookup_corpus()[:100])
-
-        # hawk = query_model("a hawk uses a beak to catch prey", depth=2)
-        # eruption = query_model("eruptions cause plants to die", depth=3, max_num_proofs=20)
         test_h = [
             "smoke from volcanic eruptions can decrease resources in an area by decreasing the availability of sunlight",
             # "a person can exert mechanical energy to push a block",
@@ -75,9 +61,7 @@ def run_eval(args, generation_args):
             # "planting trees is a kind of human action that slows the rate of soil erosion"
 
         ]
-        # for f in nellie.fact_decomposition('chlorophyll is used by plants to produce carbohydrates')[0]:
-        #     print(f['fact1'] , ' , ' , f['fact2'])
-        # for th in test_h:
+
         nellie.drg.update_db = True
         nellie.retriever.save_entailment_results = True
         test_res = nellie.query_model(test_h, depth=5, max_num_proofs=20, time_limit=args.time_limit, pretty_print=True,
@@ -88,9 +72,6 @@ def run_eval(args, generation_args):
             nellie.create_dfs_tree(h, save_render_path=os.path.join(args.search_pdfs_dir, filename))
 
         exit(0)
-
-    # query_model(["a bird uses a beak to catch prey"], 2)
-    # query_model("penguins are predatory hunters", 3)
 
     def postprocess_predictions(question: Question, result: List[Result]):
         _res = []
@@ -150,10 +131,6 @@ def run_eval(args, generation_args):
     eb_test = pd.DataFrame(read_jsonl("brtx_exp/preproc_ev/Baseline.baseline/out/entailmentbank_test.jsonl"))
     eb_test = eb_test[eb_test['fact1_rel'] != '']
     eb_test.drop_duplicates(subset='hypothesis', keep='first', inplace=True)
-    # for (i,row) in eb_test.iterrows():
-    #     res = query_model(row['hypothesis'], depth=1, max_num_proofs=1)
-    #
-    #     embed(user_ns=locals())
 
     eval_start_time = time.time()
     results = []
