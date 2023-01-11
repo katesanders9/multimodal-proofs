@@ -9,7 +9,6 @@ from copy import deepcopy
 from transformers import set_seed, T5ForConditionalGeneration, AutoTokenizer, pipeline
 
 from src.utils import read_jsonl
-from src.utils.opt_utils import OPTModel
 from src.dataset import EntailmentbankDatasetReader, ARC
 
 set_seed(42)
