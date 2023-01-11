@@ -11,6 +11,12 @@ multimodal-proofs
 └───cfg
 |   |   config.yaml              # Config file for tools/ scripts
 |
+└───flan
+|   |   extract_chains.py        # Primary FLAN script
+|   |   timers.py                # Timing helper functions for FLAN script
+|   └───utils
+|       |    __init__.py         # Additional helper functions for FLAN script
+|
 └───src
 |   |   dataset.py               # Dataset structuring classes
 |   |   engine.py                # Main NELLIE class for tree generation
