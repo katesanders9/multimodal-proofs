@@ -15,6 +15,7 @@ multimodal-proofs
 |   |   dataset.py               # Dataset structuring classes
 |   |   engine.py                # Main NELLIE class for tree generation
 |   |   fact_retrieval.py        # NELLIE FAISS search index
+|   |   hf_dataset.py            # HF dataset loader and preprocessing
 |   |   lm_engine.py             # Language model for the problog model
 |   |   metrics.py               # Evaluation function
 |   |   rule_filters.py          # Various rule filter classes
