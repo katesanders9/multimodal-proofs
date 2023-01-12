@@ -44,6 +44,7 @@ multimodal-proofs
 └───tools
     |   gen_hypotheses.py        # QA pair to hypothesis conversion script
     |   run_engine.py            # Inference script
+    |   run_flan.py              # Alternative to flan/ and gen_hypotheses scripts
 ```
 
 # Installation
