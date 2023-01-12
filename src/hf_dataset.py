@@ -1,6 +1,7 @@
 import os
 import json
 import pysrt
+from tqdm import tqdm
 
 from datasets import load_dataset
 
@@ -29,11 +30,12 @@ def load_qa():
 
 def load_subs():
     files = os.listdir(SUB_DIR)
-    data = []
+    data = {}
     for i in tqdm(range(len(files))):
         f = files[i]
         sub_data = pysrt.open(os.path.join(SUB_DIR, f))
         i = 0
+        subs = []
         for d in sub_data:
             sub = {}
             sub['file'] = f[:-4]
