@@ -26,6 +26,7 @@ multimodal-proofs
 |   |   metrics.py               # Evaluation function
 |   |   rule_filters.py          # Various rule filter classes
 |   |   problog_fns.py           # Code for problog functionality
+|   |   sbert.py                 # SBERT encoder fine-tuning code
 |   |
 |   └───problog
 |   |   |    problog_rules.pl    # Main recursive problog proof rule
