@@ -5,9 +5,9 @@ import pysrt
 from datasets import load_dataset
 
 
-QA_FN = "~/TVQA/tvqa_qa_release/tvqa_train.jsonl"
-SUB_DIR = "~/TVQA/tvqa_subtitles/"
-SUB_FN = "~/TVQA/tvqa_subs.json"
+QA_FN = "/srv/local2/ksande25/NS_data/TVQA/tvqa_qa_release/tvqa_train.jsonl"
+SUB_DIR = "/srv/local2/ksande25/NS_data/TVQA/tvqa_subtitles/"
+SUB_FN = "/srv/local2/ksande25/NS_data/TVQA/tvqa_subtitles_all.jsonl"
 
 def load_qa():
     '''
@@ -30,7 +30,8 @@ def load_qa():
 def load_subs():
     files = os.listdir(SUB_DIR)
     data = []
-    for f in files:
+    for i in tqdm(range(len(files))):
+        f = files[i]
         sub_data = pysrt.open(os.path.join(SUB_DIR, f))
         i = 0
         for d in sub_data:
@@ -54,3 +55,7 @@ def load_datasets():
     qa = load_dataset(QA_FN)
     subs = load_dataset(SUB_FN)
     return qa, subs
+
+
+if __name__ == "__main__":
+    preprocess_subs()
