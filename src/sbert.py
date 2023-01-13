@@ -5,7 +5,7 @@ from sentence_transformers.losses import TripletLoss
 from sentence_transformers.readers import LabelSentenceReader, InputExample
 from torch.utils.data import DataLoader
 
-TRAIN_JSON = '/srv/local2/ksande25/NS_data/TVQA/sbert_data.jsonl'
+TRAIN_JSON = '/srv/local2/ksande25/NS_data/TVQA/sbert_data_filtered.jsonl'
 
 class Triplets(Dataset):
     def __init__(self, df, train=True):
@@ -22,16 +22,16 @@ class Triplets(Dataset):
             self.chunks = sentences
          
     def __len__(self):
-    	if self.is_train:
-        	return len(self.chunks) + len(self.dialogue_chunks)
+        if self.is_train:
+            return len(self.chunks) + len(self.dialogue_chunks)
         else:
-        	return len(self.chunks)
+            return len(self.chunks)
     
     def __getitem__(self, item):
         anchor = self.chunks[item]
         
         if self.is_train:
-            positive_list = self.dialogue_chunks[anchor['id']]
+            positive_list = self.dialogue_chunks[str(anchor['id'])]
 
             positive = random.choice(positive_list)
 
@@ -39,7 +39,7 @@ class Triplets(Dataset):
             neg_ids.remove(anchor['id'])
             neg_id = random.choice(neg_ids)
             
-            negative_list = self.dialogue_chunks[neg_id]
+            negative_list = self.dialogue_chunks[str(neg_id)]
             negative = random.choice(negative_list)
             
             return anchor['h'], positive['text'], negative['text']
@@ -48,7 +48,7 @@ class Triplets(Dataset):
             return anchor['text']
 
 def preprocess(data_file, train):
-	data = []
+    data = []
     for line in open(data_file, 'r'):
         data.append(json.loads(line))
     return data
