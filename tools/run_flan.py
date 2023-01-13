@@ -77,3 +77,8 @@ def gen_from_json(json_fn):
 
 if __name__ == "__main__":
     gen_from_json(QA_FN)
+
+
+# timed_forward_pass
+# encode_input2([s1,s2,...])
+# decode_output

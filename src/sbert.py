@@ -1,4 +1,3 @@
-# sentence-transformers==1.0.4, torch==1.7.0.
 import random
 from collections import defaultdict
 from sentence_transformers import SentenceTransformer, SentencesDataset
@@ -6,18 +5,58 @@ from sentence_transformers.losses import TripletLoss
 from sentence_transformers.readers import LabelSentenceReader, InputExample
 from torch.utils.data import DataLoader
 
-# Load pre-trained model - we are using the original Sentence-BERT for this example.
+TRAIN_JSON = 
+
+class Triplets(Dataset):
+    def __init__(self, df, train=True):
+        self.is_train = train
+        self.transform = None
+
+        sentences = preprocess(df,train)
+        
+        if self.is_train:
+            self.chunks = sentences['hypotheses']
+            self.dialogue_chunks = sentences['dialogue']
+            self.ids = list([x['id'] for x in self.chunks])
+        else:
+            self.chunks = sentences
+         
+    def __len__(self):
+    	if self.is_train:
+        	return len(self.chunks) + len(self.dialogue_chunks)
+        else:
+        	return len(self.chunks)
+    
+    def __getitem__(self, item):
+        anchor = self.chunks[item]
+        
+        if self.is_train:
+            positive_list = self.dialogue_chunks[anchor['id']]
+
+            positive = random.choice(positive_list)
+
+            neg_ids = list(self.ids)
+            neg_ids.remove(anchor['id'])
+            neg_id = random.choice(neg_ids)
+            
+            negative_list = self.dialogue_chunks[neg_id]
+            negative = random.choice(negative_list)
+            
+            return anchor['text'], positive['text'], negative['text']
+        
+        else:
+            return anchor['text']
+
+def preprocess(data_file, train):
+	data = []
+    for line in open(data_file, 'r'):
+        data.append(json.loads(line))
+    return data
+
+
 sbert_model = SentenceTransformer('all-mpnet-base-v2')
+data = Triplets(TRAIN_JSON, train=True)
+dataset = DataLoader(data, batch_size=batch_size, shuffle=True)
 
-# Set up data for fine-tuning 
-sentence_reader = LabelSentenceReader(folder='~/tsv_files')
-data_list = sentence_reader.get_examples(filename='recipe_bot_data.tsv')
-triplets = triplets_from_labeled_dataset(input_examples=data_list)
-finetune_data = SentencesDataset(examples=triplets, model=sbert_model)
-finetune_dataloader = DataLoader(finetune_data, shuffle=True, batch_size=16)
-
-# Initialize triplet loss
 loss = TripletLoss(model=sbert_model)
-
-# Fine-tune the model
-sbert_model.fit(train_objectives=[(finetune_dataloader, loss)], epochs=4,output_path='bert-base-nli-stsb-mean-tokens-recipes')
+sbert_model.fit(train_objectives=[(dataset, loss)], epochs=5,output_path='sbert_tvqa')
