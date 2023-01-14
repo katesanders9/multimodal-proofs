@@ -54,12 +54,14 @@ def preprocess(data_file, train):
         data = json.load(f)
     return data
 
-print("Loading data...")
-data = Triplets(TRAIN_JSON, train=True)
-dataset = DataLoader(data, batch_size=32, shuffle=True)
-print("Loading model...")
-sbert_model = SentenceTransformer('all-mpnet-base-v2')
-loss = TripletLoss(model=sbert_model)
+if __name__ == "__main__":
 
-print("Training model...")
-sbert_model.fit(train_objectives=[(dataset, loss)], epochs=5,output_path='sbert_tvqa', show_progress_bar=True)
+    print("Loading data...")
+    data = Triplets(TRAIN_JSON, train=True)
+    dataset = DataLoader(data, batch_size=32, shuffle=True)
+    print("Loading model...")
+    sbert_model = SentenceTransformer('all-mpnet-base-v2')
+    loss = TripletLoss(model=sbert_model)
+
+    print("Training model...")
+    sbert_model.fit(train_objectives=[(dataset, loss)], epochs=5,output_path='sbert_tvqa', show_progress_bar=True)
