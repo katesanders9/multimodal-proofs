@@ -11,16 +11,12 @@ multimodal-proofs
 └───cfg
 |   |   config.yaml              # Config file for tools/ scripts
 |
-└───flan
-|   |   flan.py                  # Currently used FLAN code for hypothesis generation
-|   └───utils
-|       |    __init__.py         # Additional helper functions for FLAN script
-|
 └───src
 |   |   dialogue_retrieval.py    # Dialogue retrieval engine
-|   |   hf_dataset.py            # HF dataset loader and preprocessing
-|   |   rule_filters.py          # Various rule filter classes
-|   |   problog_fns.py           # Code for problog functionality
+|   |   flan.py                  # Currently used FLAN code for hypothesis generation
+|   |   dataset.py               # HF dataset loader and preprocessing
+|   |   rule_filters.py          # NELLIE: Various rule filter classes
+|   |   problog_fns.py           # NELLIE: Code for problog functionality
 |   |   sbert.py                 # SBERT encoder fine-tuning code/script
 |   |
 |   └───problog
@@ -36,7 +32,6 @@ multimodal-proofs
 |
 └───tools
     |   eval_retrieval.py        # Script to evaluate dialogue_retrieval.py
-    |   gen_hypotheses.py        # QA pair to hypothesis conversion script
 ```
 
 # Installation
