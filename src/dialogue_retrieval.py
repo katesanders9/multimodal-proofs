@@ -47,5 +47,6 @@ def load_dialogue(json_fn):
 		data = json.load(f)
 	return data
 
-engine = RetrievalEngine()
-dialogue_dataset = load_dialogue('/srv/local2/ksande25/NS_data/TVQA/tvqa_subtitles_all.jsonl')
+if __name__ == "__main__":
+	engine = RetrievalEngine()
+	dialogue_dataset = load_dialogue('/srv/local2/ksande25/NS_data/TVQA/tvqa_subtitles_all.jsonl')
