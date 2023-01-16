@@ -64,4 +64,4 @@ if __name__ == "__main__":
     loss = TripletLoss(model=sbert_model)
 
     print("Training model...")
-    sbert_model.fit(train_objectives=[(dataset, loss)], epochs=5,output_path='sbert_tvqa', show_progress_bar=True)
+    sbert_model.fit(train_objectives=[(dataset, loss)], epochs=40,output_path='sbert_tvqa_3', show_progress_bar=True)
