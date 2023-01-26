@@ -5,13 +5,15 @@ from sentence_transformers import SentenceTransformer
 from src.flan import HypothesisGenerator, MODEL_NAME, ICL_PROMPT
 
 class RetrievalEngine:
-	def __init__(self, threshold=0.8, init_generator=False):
+	def __init__(self, threshold=0.8, init_generator=False, metric=None):
 		self.generator = None
 		if init_generator:
 			self.generator = self.initialize_generator()
 		self.encoder = self.load_encoder('sbert_tvqa_3')
 		self.threshold = threshold
-		self.metric = lambda x, y: cosine_similarity(Tensor(x).reshape(1,-1), Tensor(y).reshape(1,-1))
+		if not metric:
+			metric = lambda x, y: cosine_similarity(Tensor(x).reshape(1,-1), Tensor(y).reshape(1,-1))
+		self.metric = metric
 
 	def initialize_generator(self):
 		gen = HypothesisGenerator(MODEL_NAME, ICL_PROMPT)
@@ -27,17 +29,15 @@ class RetrievalEngine:
 	def encode_sentences(self, sentences):
 		return self.encoder.encode(sentences)
 
-	def compute_similarity(self, query, sentences, metric):
+	def compute_similarity(self, query, sentences):
 		encoded = self.encode_sentences([query] + sentences)
 		q_encoded = encoded[0]
 		s_encoded = encoded[1:]
-		sim_scores = [metric(q_encoded, s).item() for s in s_encoded]
+		sim_scores = [self.metric(q_encoded, s).item() for s in s_encoded]
 		return sim_scores
 
-	def retrieve_dialogue(self, query, clip_name, dset, QA_flag=False, metric=None, threshold=None):
+	def retrieve_dialogue(self, query, clip_name, dset, QA_flag=False, threshold=None):
 		dialogue = dset[clip_name]
-		if not metric:
-			metric = self.metric
 		if not threshold:
 			threshold = self.threshold
 		if QA_flag:
