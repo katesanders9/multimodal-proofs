@@ -22,6 +22,67 @@ Robin is holding a beer bottle in her hand when she is talking to Ted about Zoey
 Combine the question/answer pair into a single declarative statement:
 '''
 
+BRANCH_PROMPT = '''
+Given the provided dialogue, write a fact that would make the statement true:
+Dialogue: (PHOEBE): If you never smoke again I'll give you $7000.
+Statement: Phoebe promised to give Chandler money.
+Fact: Phoebe was speaking to Chandler.
+
+Given the provided dialogue, write a fact that would make the statement true:
+Dialogue: (ROBIN): Zoey’s protest could still shut your whole project down.
+Statement: Robin is talking to Ted about Zoey.
+Fact: Robin is talking to Ted.
+
+Write two facts that, together, would make the statement true:
+'''
+
+DECOMP_PROMPT = '''
+
+Decompose the statement into its two main clauses:
+Statement: Raj is playing guitar when Raj and Howard have their show.
+Clause 1: Raj is playing guitar.
+Clause 2: Raj and Howard have their show.
+
+Decompose the statement into its two main clauses:
+Statement: Castle is vexed before he reads the note in the kitchen.
+Clause 1: Castle is vexed.
+Clause 2: Castle reads the note in the kitchen.
+
+Decompose the statement into its two main clauses:
+'''
+
+DECOMP_PROMPT = '''
+Identify the statement's independent and dependent clauses:
+Statement: Robin is holding a beer bottle in her hand when she is talking to Ted about Zoey.
+Independent clause: Robin is holding a beer bottle in her hand
+Dependent clause: when she is talking to Ted about Zoey
+
+Decompose the statement into its two main clauses:
+Statement: Raj is playing guitar when Raj and Howard have their show.
+Independent clause: Raj is playing guitar
+Dependent clause: when Raj and Howard have their show
+
+Identify the statement's independent and dependent clauses:
+'''
+
+DECOMP_PROMPT = '''
+Complete the sentence decomposition:
+Sentence: Robin is holding a beer bottle in her hand when she is talking to Ted about Zoey.
+A: Robin is holding a beer bottle in her hand.
+B: Robin is talking to Ted about Zoey.
+
+Complete the sentence decomposition:
+Sentence: Raj is playing guitar when Raj and Howard have their show.
+A: Raj is playing guitar.
+B: Raj and Howard have their show.
+
+Complete the sentence decomposition:
+'''
+
+DIALOGUE_PROMPT = '''
+Statement: Joey wants Chandler to kiss Janice because then she will leave.
+'''
+
 class HypothesisGenerator:
     def __init__(self, model_name, prompt):
         self.tokenizer = T5Tokenizer.from_pretrained(model_name)
@@ -80,3 +141,4 @@ class HypothesisGenerator:
 if __name__ == "__main__":
     generator = HypothesisGenerator(MODEL_NAME, ICL_PROMPT)
     generator.gen_from_json(QA_FN)
+

@@ -19,6 +19,8 @@ multimodal-proofs
 |   |   rule_generators.py       # NELLIE: Helps define network for problog model
 |   |   problog_fns.py           # NELLIE: Code for problog functionality
 |   |   sbert.py                 # SBERT encoder fine-tuning code/script
+|   |   search.py                # Generate dialogue tree
+|   |   vision.py                # Vision module
 |   |
 |   └───problog
 |   |   |    problog_rules.pl    # Main recursive problog proof rule
@@ -32,8 +34,9 @@ multimodal-proofs
 |       |    utils.py            # General helper function file
 |
 └───tools
-    |   eval_entailment.py       # Script to evaluate rule_filters.py
+    |   eval_entailment.py       # Script to evaluate filters.py
     |   eval_retrieval.py        # Script to evaluate dialogue_retrieval.py
+    |   eval_search.py           # Script to evaluate dialogue tree generation
 ```
 
 # Installation
