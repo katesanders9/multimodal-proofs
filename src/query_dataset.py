@@ -27,7 +27,7 @@ class TVQADataSet(object):
 	def h_to_q(self):
 		self.queries = {}
 		for h in self.hypotheses:
-			q = Query(h, get_clip(h['id']), get_time(h['id']))
+			q = Query(h, self.get_clip(h['id']), self.get_time_h(h['id']))
 			self.queries[h['id']] = q
 
 	def get_dialogue(self, q, all_lines=False):
@@ -40,12 +40,12 @@ class TVQADataSet(object):
 	def get_clip(self, hid):
 		return self.mapping[str(hid)]['vid']
 
-	def get_time(self, hid):
+	def get_time_h(self, hid):
 		return self.mapping[str(hid)]['ts']
 
 	def load_data(self, fn):
-		with open(DATA_DIR + fn, 'r') as f:
-			data = json.load(f)
+		fn = DATA_DIR + fn
+		data = self.load_jsonl(fn)
 		return data
 
 	def load_ground_truth(self, h, s, m):
@@ -79,7 +79,7 @@ class TVQADataSet(object):
 			x = []
 			for l in f:
 				x.append(json.loads(l))
-		return x
+		return x[0]
 
 	def load_qa(self):
 		train = self.load_jsonl(DATA_DIR + '/tvqa_train.jsonl')
