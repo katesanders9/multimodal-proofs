@@ -4,7 +4,8 @@ import numpy as np
 import openai
 from sentence_transformers import CrossEncoder
 
-openai.api_key = "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"
+with open('keys.txt', 'r') as f:
+    openai.api_key = f.read().strip()
 
 os.environ['TRANSFORMERS_CACHE'] = '/srv/local1/ksande25/cache/huggingface'
 
