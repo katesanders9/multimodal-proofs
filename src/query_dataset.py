@@ -30,7 +30,7 @@ class TVQADataSet(object):
 			q = Query(h, self.get_clip(h['id']), self.get_time_h(h['id']))
 			self.queries[h['id']] = q
 
-	def get_dialogue(self, q, all_lines=False):
+	def get_dialogue_q(self, q, all_lines=False):
 		hid = q.id
 		if not all_lines:
 			return self.ground_truth[str(hid)]
