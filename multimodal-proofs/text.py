@@ -65,28 +65,19 @@ class RetrieverBM25(Retriever):
         self.n = n
 
     def set_transcript(self, transcript):
-        transcript = [x[1] for x in sample_h(self.transcript, self.n, hypothesis)]
-        self.transcript = [[x.lower() for x in doc.split(" ")] for doc in transcript]
-        self.model = BM25Okapi(self.transcript)
-
-    def __call__(self, hypothesis):
-        hypothesis = [h.lower() for h in hypothesis.split(" ")]
-        scores_c = bm25.get_scores(tokenized_query)
-        inds = []
-        for i in range(self.n):
-            top = max(scores_c)
-            inds.append(top)
-            scores_c.remove(top)
-        inds = [scores.index(x) for x in inds]
-        return [samples[i] for i in inds]
+	transcript = [x[1] for x in sample_h(transcript, self.n, hypothesis)]
+	self.transcript = [[x.lower() for x in doc.split(" ")] for doc in transcript]
+	self.model = BM25Okapi(self.transcript)
+	self.transcript_og = transcript
 
     def __call__(self, hypothesis, thresh=0):
-        samples = sample_h(self.transcript, self.n, hypothesis)
-        scores = self.model.predict([s[1] for s in samples])
-        if thresh and not any([s > thresh for s in scores]):
-            return None
-        d = samples[np.argmax(scores)][0]
-        return d
+	samples = sample_h(self.transcript_og, self.n, hypothesis)
+	hypothesis = [h.lower() for h in hypothesis.split(" ")]
+	scores = bm25.get_scores(hypothesis)
+	if thresh and not any([s > thresh for s in scores]):
+		return None
+	d = samples[np.argmax(scores)][0]
+	return d
 
 class LineRetriever(Retriever):
 
