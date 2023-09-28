@@ -52,23 +52,20 @@ class Retriever(object):
     def set_transcript(self, transcript):
         self.transcript = transcript
 
-    def __call__(self, hypothesis):
-        samples = [(hypothesis,x) for x in self.transcript]
-        scores = list(self.model.predict(samples))
-        scores_c = list(scores)
-        inds = []
-        for i in range(self.n):
-            top = max(scores_c)
-            inds.append(top)
-            scores_c.remove(top)
-        inds = [scores.index(x) for x in inds]
-        return [samples[i] for i in inds]
+    def __call__(self, hypothesis, thresh=0):
+        samples = sample_h(self.transcript, self.n, hypothesis)
+        scores = self.model.predict([s[1] for s in samples])
+        if thresh and not any([s > thresh for s in scores]):
+            return None
+        d = samples[np.argmax(scores)][0]
+        return d
 
 class RetrieverBM25(Retriever):
     def __init__(self, n=6):
         self.n = n
 
     def set_transcript(self, transcript):
+        transcript = [x[1] for x in sample_h(self.transcript, self.n, hypothesis)]
         self.transcript = [[x.lower() for x in doc.split(" ")] for doc in transcript]
         self.model = BM25Okapi(self.transcript)
 
@@ -83,14 +80,27 @@ class RetrieverBM25(Retriever):
         inds = [scores.index(x) for x in inds]
         return [samples[i] for i in inds]
 
-class LineRetriever(Retriever):
-    def __call__(self, hypothesis, transcript, thresh=0):
-        samples = sample_h(transcript, self.n, hypothesis)
+    def __call__(self, hypothesis, thresh=0):
+        samples = sample_h(self.transcript, self.n, hypothesis)
         scores = self.model.predict([s[1] for s in samples])
-        if not any([s > thresh for s in scores]):
+        if thresh and not any([s > thresh for s in scores]):
             return None
         d = samples[np.argmax(scores)][0]
         return d
+
+class LineRetriever(Retriever):
+
+    def __call__(self, hypothesis, transcript):
+        samples = [(hypothesis,x) for x in transcript]
+        scores = list(self.model.predict(samples))
+        scores_c = list(scores)
+        inds = []
+        for i in range(self.n):
+            top = max(scores_c)
+            inds.append(top)
+            scores_c.remove(top)
+        inds = [scores.index(x) for x in inds]
+        return [samples[i] for i in inds]
 
 
 class TextGen(object):
