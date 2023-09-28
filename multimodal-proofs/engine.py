@@ -5,10 +5,13 @@ from text import TextGen, NLI, Retriever, LineRetriever
 
 
 os.environ['TRANSFORMERS_CACHE'] = '/srv/local1/ksande25/cache/huggingface'
+path = '/srv/local2/ksande25/NS_data/TVQA/'
 
 class Engine(object):
 
 	def __init__(self):
+		with open(path + 'tvqa_subtitles_all.jsonl', 'r') as f:
+			self.transcripts = [json.loads(x) for x in f][0]
 		self.max_steps = 3
 		self.vision = VisionModel()
 		self.retrieval = Retriever()
@@ -23,9 +26,9 @@ class Engine(object):
 		self.show = show
 		self.clip = clip
 		self.vision.set_clip(show, clip)
-		self.t = transcripts[clip]
-		self.retrieval.set_transcript(self.t)
-		self.line_retrieval.set_transcript(self.t)
+		self.t = self.transcripts[clip]
+		self.retrieval.set_transcript([x['text'] for x in self.t])
+		self.line_retrieval.set_transcript([x['text'] for x in self.t])
 
 	# call vision
 	def call_vision(self, h):

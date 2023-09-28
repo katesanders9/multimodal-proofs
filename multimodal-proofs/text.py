@@ -18,7 +18,7 @@ class GPT(object):
         self.preamble = preamble
         self.set_key()
 
-    def set_key(self, key):
+    def set_key(self):
         openai.api_key = self.key
 
     def __call__(self, message):
@@ -33,7 +33,7 @@ class GPT(object):
         return response['choices'][0]['message']['content']
 
 
-class NLI(object)
+class NLI(object):
     def __init__(self):
         self.model = CrossEncoder('cross-encoder/nli-distilroberta-base')
 
@@ -57,12 +57,12 @@ class Retriever(object):
         scores = list(self.model.predict(samples))
         scores_c = list(scores)
         inds = []
-        for i in range(n):
+        for i in range(self.n):
             top = max(scores_c)
             inds.append(top)
             scores_c.remove(top)
         inds = [scores.index(x) for x in inds]
-        return inds
+        return [samples[i] for i in inds]
 
 class RetrieverBM25(Retriever):
     def __init__(self, n=6):
@@ -76,12 +76,12 @@ class RetrieverBM25(Retriever):
         hypothesis = [h.lower() for h in hypothesis.split(" ")]
         scores_c = bm25.get_scores(tokenized_query)
         inds = []
-        for i in range(n):
+        for i in range(self.n):
             top = max(scores_c)
             inds.append(top)
             scores_c.remove(top)
         inds = [scores.index(x) for x in inds]
-        return inds
+        return [samples[i] for i in inds]
 
 class LineRetriever(Retriever):
     def __call__(self, hypothesis, transcript, thresh=0):

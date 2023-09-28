@@ -19,8 +19,8 @@ processor = ViltProcessor.from_pretrained("dandelin/vilt-b32-finetuned-vqa")
 model = ViltForQuestionAnswering.from_pretrained("dandelin/vilt-b32-finetuned-vqa")
 
 
-class ObjectRecognition(object, rate=2, thresh=.9):
-    def __init__(self):
+class ObjectRecognition(object):
+    def __init__(self, rate=2, thresh=.9):
         self.model = YolosForObjectDetection.from_pretrained('hustvl/yolos-tiny')
         self.image_processor = YolosImageProcessor.from_pretrained("hustvl/yolos-tiny")
         self.path = '/srv/local2/ksande25/NS_data/TVQA/frames/frames_hq/'
@@ -78,7 +78,7 @@ class VisionModel(object):
         self.charRec.set_clip(show, clip)
         self.objectRec.set_clip(show, clip)
 
-    def set_rate(self, rate)
+    def set_rate(self, rate):
         self.rate = rate
 
     def set_char_thresh(self, thresh):

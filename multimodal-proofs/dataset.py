@@ -1,3 +1,5 @@
+from utils.dataset_utils import *
+
 class Dataset(object):
 	def __init__(self):
 		self.transcripts, self.train, self.val, self.test = load_dataset()
