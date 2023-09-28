@@ -17,6 +17,8 @@ class FaceNet(object):
         self.featurizer = DeepFace.represent
         self.frames_path = '/srv/local2/ksande25/NS_data/TVQA/frames/frames_hq/'
         self.data_path = '/srv/local2/ksande25/NS_data/TVQA/chars/'
+        self.rate = 2 
+        self.th = .5
 
     def set_clip(self, show, clip):
         self.show = show
@@ -25,8 +27,8 @@ class FaceNet(object):
     def set_rate(self, rate):
         self.rate = rate
 
-    def set_thresh(self, thresh):
-        self.thresh = thresh
+    def set_thresh(self, th):
+        self.th = th
 
     # {id: {im_name, feats, facial_area, confidence}}
     def __call__(self):
@@ -41,17 +43,17 @@ class FaceNet(object):
         out = {}
         for i in tqdm(list(d.keys())):
             for r in d[i]:
-                out[ind] = {'im_name': i, 'feats': self.extract(i, r['facial_area'], th), 'facial_area': r['facial_area'], 'confidence': r['confidence']}
+                out[ind] = {'im_name': i, 'feats': self.extract(i, r['facial_area']), 'facial_area': r['facial_area'], 'confidence': r['confidence']}
                 ind += 1
-        np.save(self.data_path + self.clip + '_' + str(self.rate) + '_' + str(th) + '_char.npy', out)
+        np.save(self.data_path + self.clip + '_' + str(self.rate) + '_' + str(self.th) + '_char.npy', out)
         return out
 
-    def extract(self, im_name, area):
+    def extract(self, im_name, area, th):
         nd = {}
         image = np.array(Image.open(self.frames_path+self.show+'_frames/'+self.clip+'/'+im_name))
         a = area
-        w2 = int(a['w']*th)
-        h2 = int(a['h']*th)
+        w2 = int(a['w']*self.th)
+        h2 = int(a['h']*self.th)
         x = max(0, a['x'] - w2)
         y = max(0, a['y'] - h2)
         w = a['w']+w2
@@ -83,7 +85,6 @@ class CharacterEngine(object):
 
     def set_thresh(self, thresh):
         self.thresh = thresh 
-        self.model.set_thresh(thresh)
 
     def load_data(self):
     # load retinanet outputs, gt clusters, and labels as dict. 

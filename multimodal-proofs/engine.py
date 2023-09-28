@@ -24,10 +24,12 @@ class Engine(object):
 		self.clip = clip
 		self.vision.set_clip(show, clip)
 		self.t = transcripts[clip]
+		self.retrieval.set_transcript(self.t)
+		self.line_retrieval.set_transcript(self.t)
 
 	# call vision
 	def call_vision(self, h):
-	    q, qa = self.generator.toq()
+	    q, qa = self.generator.toq(h)
 	    names = q2v(q, self.t)
 	    out = self.vision(qa, names)
 	    return out

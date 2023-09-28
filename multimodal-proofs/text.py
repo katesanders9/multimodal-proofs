@@ -3,18 +3,20 @@ import json
 import numpy as np
 import openai
 from sentence_transformers import CrossEncoder
+from rank_bm25 import BM25Okapi
 from prompts import *
 from utils.text_utils import *
 
 class GPT(object):
-    self.temp = 0.5
-    self.model = "gpt-3.5-turbo"
-    self.max_tokens = 1000
-    self.preamble = []
 
-    def __init__(self):
+    def __init__(self, temp=0.5, model="gpt-3.5-turbo", max_tokens=1000, preamble=[]):
         with open('keys.txt', 'r') as f:
             self.key = f.read().strip()
+        self.temp = temp
+        self.model = model
+        self.max_tokens = max_tokens
+        self.preamble = preamble
+        self.set_key()
 
     def set_key(self, key):
         openai.api_key = self.key
@@ -62,6 +64,24 @@ class Retriever(object):
         inds = [scores.index(x) for x in inds]
         return inds
 
+class RetrieverBM25(Retriever):
+    def __init__(self, n=6):
+        self.n = n
+
+    def set_transcript(self, transcript):
+        self.transcript = [[x.lower() for x in doc.split(" ")] for doc in transcript]
+        self.model = BM25Okapi(self.transcript)
+
+    def __call__(self, hypothesis):
+        hypothesis = [h.lower() for h in hypothesis.split(" ")]
+        scores_c = bm25.get_scores(tokenized_query)
+        inds = []
+        for i in range(n):
+            top = max(scores_c)
+            inds.append(top)
+            scores_c.remove(top)
+        inds = [scores.index(x) for x in inds]
+        return inds
 
 class LineRetriever(Retriever):
     def __call__(self, hypothesis, transcript, thresh=0):
@@ -79,12 +99,6 @@ class TextGen(object):
         self.h = None
         self.d = None
 
-    def set_hypothesis(self, h):
-        self.h = h
-
-    def set_dialogue(self, d):
-        self.d = d
-
     def declaritivize(self, q, a):
         prompt = declaritivize_prompt.format(q=q,a=a)
         h = self.model(prompt)
@@ -92,22 +106,22 @@ class TextGen(object):
             h = h[1:-1]
         return h
 
-    def inference(self, l):
+    def inference(self, h, d, l):
         d = [remove_breaks(x) for x in d]
         d = ['(' + str(i) + ') ' + x for i, x in enumerate(d)]
         d = '\n'.join(d)
-        prompt = inference_prompt.format(l=l, h=self.h, d=self.d)
+        prompt = inference_prompt.format(l=l, h=h, d=d)
         s = self.model(prompt)
         return list(json.loads(s).values())
 
-    def branch(self):
+    def branch(self, h, d):
         d = '\n'.join(d)
-        prompt =  branch_prompt.format(h=self.h, d=self.d)
+        prompt =  branch_prompt.format(h=h, d=d)
         hp = self.model(prompt)
         return list(json.loads(hp).values())
 
-    def toq(self):
-        prompt = toq_prompt.format(h=self.h)
+    def toq(self, h):
+        prompt = toq_prompt.format(h=h)
         qa = self.model(prompt)
         qa = qa.split('"')
         qa, qaa = qa[1], qa[3]
