@@ -65,19 +65,19 @@ class RetrieverBM25(Retriever):
         self.n = n
 
     def set_transcript(self, transcript):
-	transcript = [x[1] for x in sample_h(transcript, self.n, hypothesis)]
-	self.transcript = [[x.lower() for x in doc.split(" ")] for doc in transcript]
-	self.model = BM25Okapi(self.transcript)
-	self.transcript_og = transcript
+    transcript = [x[1] for x in sample_h(transcript, self.n, hypothesis)]
+    self.transcript = [[x.lower() for x in doc.split(" ")] for doc in transcript]
+    self.model = BM25Okapi(self.transcript)
+    self.transcript_og = transcript
 
     def __call__(self, hypothesis, thresh=0):
-	samples = sample_h(self.transcript_og, self.n, hypothesis)
-	hypothesis = [h.lower() for h in hypothesis.split(" ")]
-	scores = bm25.get_scores(hypothesis)
-	if thresh and not any([s > thresh for s in scores]):
-		return None
-	d = samples[np.argmax(scores)][0]
-	return d
+    samples = sample_h(self.transcript_og, self.n, hypothesis)
+    hypothesis = [h.lower() for h in hypothesis.split(" ")]
+    scores = bm25.get_scores(hypothesis)
+    if thresh and not any([s > thresh for s in scores]):
+        return None
+    d = samples[np.argmax(scores)][0]
+    return d
 
 class LineRetriever(Retriever):
 
