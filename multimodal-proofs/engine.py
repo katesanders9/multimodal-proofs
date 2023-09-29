@@ -1,7 +1,7 @@
 import os
 import json
 from vqa import VisionModel
-from text import TextGen, NLI, Retriever, LineRetriever
+from text import TextGen, NLI, Retriever, LineRetriever, RetrieverBM25
 
 
 os.environ['TRANSFORMERS_CACHE'] = '/srv/local1/ksande25/cache/huggingface'
@@ -9,15 +9,17 @@ path = '/srv/local2/ksande25/NS_data/TVQA/'
 
 class Engine(object):
 
-	def __init__(self):
+	def __init__(self, max_steps=3):
+		self.cache = []
 		with open(path + 'tvqa_subtitles_all.jsonl', 'r') as f:
 			self.transcripts = [json.loads(x) for x in f][0]
-		self.max_steps = 3
+		self.max_steps = max_steps
 		self.vision = VisionModel()
 		self.retrieval = Retriever()
-		self.line_retrieval = LineRetriever()
+		self.line_retrieval = LineRetriever(2)
+		self.bm25 = RetrieverBM25()
 		self.nli = NLI()
-		self.generator = TextGen()
+		self.generator = TextGen(temp=0.2)
 
 		self.show = None
 		self.clip = None
@@ -27,6 +29,7 @@ class Engine(object):
 		self.clip = clip
 		self.vision.set_clip(show, clip)
 		self.t = self.transcripts[clip]
+		self.bm25.set_transcript([x['text'] for x in self.t])
 		self.retrieval.set_transcript([x['text'] for x in self.t])
 		self.line_retrieval.set_transcript([x['text'] for x in self.t])
 
@@ -42,20 +45,24 @@ class Engine(object):
 	    d = self.retrieval(h)
 	    if d:
 	        l = self.line_retrieval(h, d)
-	        s, x = [], []
+	        s, x = self.cache, self.nli(self.cache, h)
 	        for line in l:
-	            s += self.generator.inference(h, d, l)
-	            x += self.nli(s, h, th=0)
-	        if not x and k < self.max_steps - 1:
+	            c = [(d[line],i) for i in self.generator.inference(h, d, line)]
+	            s += c
+	            self.cache += c
+	            x += self.nli(s, h)
+	        if x:
+	            return [h, x[0]]
+	        elif not x and k < self.max_steps - 1:
 	            h1, h2 = self.generator.branch(h, d)
 	            x1 = self.query(h1, k+1)
 	            x2 = self.query(h2, k+1)
-	            x = x1 + x2
+	            x = [h, x1, x2]
 	        else:
-	            return None
+	            return [None]
 	    else:
 	        x = self.call_vision(h, t)
-	    return x
+	    return [h, x]
 
 	# full pipeline
 	def main(self, q, a):

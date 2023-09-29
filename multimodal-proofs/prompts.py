@@ -7,10 +7,13 @@ ANSWER: "{a}"
 STATEMENT: 
 """
 
-inference_prompt = entailment_definition + \
+inference_preamble = entailment_definition + \
 """
-\nWrite a set of five hypotheses that relate to the FACT and are specifically entailed by dialogue line ({l}) in JSON format, i.e. {"1": "<answer here>", "2": "<answer here>", ...} and nothing else. 
-FACT: "{h}" 
+\nWrite a set of five hypotheses that relate to the FACT and are specifically entailed by the specified dialogue line in JSON format, i.e. {"1": "<answer here>", "2": "<answer here>", ...} and nothing else.
+"""
+
+inference_prompt=""" 
+\nFACT: "{h}" 
 DIALOGUE: 
 ```
 {d}
@@ -18,10 +21,13 @@ DIALOGUE:
 LINE ({l}) ENTAILMENTS:
 """
 
-branch_prompt = entailment_definition + \
+branch_preamble = entailment_definition + \
 """
 \nWrite two facts that are entailed by the dialogue that, together, make the hypothesis true. Write your answer in JSON format, i.e. {"1": "<fact 1>", "2": "<fact 2>"} and nothing else.
-HYPOTHESIS: "{h}"
+"""
+
+branch_prompt = """
+\nHYPOTHESIS: "{h}"
 DIALOGUE:
 ```
 {d}

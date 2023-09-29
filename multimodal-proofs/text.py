@@ -38,9 +38,11 @@ class NLI(object):
         self.model = CrossEncoder('cross-encoder/nli-distilroberta-base')
 
     def __call__(self, inferences, hypothesis, thresh=0):
-        inputs = [(x,hypothesis) for x in inferences]
+        if not inferences:
+            return []
+        inputs = [(x[1],hypothesis) for x in inferences]
         scores = self.model.predict(inputs)
-        filtered = [inputs[i][1] for i in range(len(scores)) if scores[i][1] > thresh]
+        filtered = [inferences[i] for i in range(len(scores)) if scores[i][1] > thresh]
         return filtered
 
 
@@ -65,19 +67,19 @@ class RetrieverBM25(Retriever):
         self.n = n
 
     def set_transcript(self, transcript):
-    transcript = [x[1] for x in sample_h(transcript, self.n, hypothesis)]
-    self.transcript = [[x.lower() for x in doc.split(" ")] for doc in transcript]
-    self.model = BM25Okapi(self.transcript)
-    self.transcript_og = transcript
+        self.transcript_og = transcript
+        transcript = [x[1][1] for x in sample_h(transcript, self.n, 'h')]
+        self.transcript = [[x.lower() for x in doc.replace('\n',' ').split(" ")] for doc in transcript]
+        self.model = BM25Okapi(self.transcript)
 
     def __call__(self, hypothesis, thresh=0):
-    samples = sample_h(self.transcript_og, self.n, hypothesis)
-    hypothesis = [h.lower() for h in hypothesis.split(" ")]
-    scores = bm25.get_scores(hypothesis)
-    if thresh and not any([s > thresh for s in scores]):
-        return None
-    d = samples[np.argmax(scores)][0]
-    return d
+        samples = sample_h(self.transcript_og, self.n, hypothesis)
+        hypothesis = [h.lower() for h in hypothesis.split(" ")]
+        scores = self.model.get_scores(hypothesis)
+        if thresh and not any([s > thresh for s in scores]):
+            return None
+        d = samples[np.argmax(scores)][0]
+        return d
 
 class LineRetriever(Retriever):
 
@@ -91,12 +93,12 @@ class LineRetriever(Retriever):
             inds.append(top)
             scores_c.remove(top)
         inds = [scores.index(x) for x in inds]
-        return [samples[i] for i in inds]
+        return inds
 
 
 class TextGen(object):
-    def __init__(self):
-        self.model = GPT()
+    def __init__(self,temp=0.5):
+        self.model = GPT(temp)
         self.h = None
         self.d = None
 
@@ -111,13 +113,13 @@ class TextGen(object):
         d = [remove_breaks(x) for x in d]
         d = ['(' + str(i) + ') ' + x for i, x in enumerate(d)]
         d = '\n'.join(d)
-        prompt = inference_prompt.format(l=l, h=h, d=d)
+        prompt = inference_preamble + inference_prompt.format(l=l, h=h, d=d)
         s = self.model(prompt)
         return list(json.loads(s).values())
 
     def branch(self, h, d):
         d = '\n'.join(d)
-        prompt =  branch_prompt.format(h=h, d=d)
+        prompt =  branch_preamble + branch_prompt.format(h=h, d=d)
         hp = self.model(prompt)
         return list(json.loads(hp).values())
 
