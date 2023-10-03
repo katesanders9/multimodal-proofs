@@ -1,6 +1,6 @@
 entailment_definition = 'Textual entailment is defined as a directional relation between two text fragments, called text (t, the entailing text), and hypothesis (h, the entailed text), so that a human being, with common understanding of language and common background knowledge, can infer that h is most likely true on the basis of the content of t.'
 
-declaritivize_prompt = """
+declarativize_prompt = """
 Combine the following question-answer pair into a single declarative statement. 
 QUESTION: "{q}"
 ANSWER: "{a}"
