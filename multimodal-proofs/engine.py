@@ -42,6 +42,7 @@ class Engine(object):
 
 	# recursive loop
 	def query(self, h, k):
+		x = None
 	    d = self.retrieval(h)
 	    if d:
 	        l = self.line_retrieval(h, d)
@@ -52,17 +53,44 @@ class Engine(object):
 	            self.cache += c
 	            x += self.nli(s, h)
 	        if x:
-	            return [h, x[0]]
+	        	x = max(x, key=lambda y: y[1])
+	            return [h, x[0], x[1]]
 	        elif not x and k < self.max_steps - 1:
-	            h1, h2 = self.generator.branch(h, d)
-	            x1 = self.query(h1, k+1)
-	            x2 = self.query(h2, k+1)
-	            x = [h, x1, x2]
+				v = self.call_vision(h)
+				if v:
+					x = max(x, key=lambda y: y[2])
+	        		return [h, x[0], x[2]]
+				if k == 0:
+	            	h1, h2 = self.generator.branch_a(h, d)
+	            	x1 = self.query(h1, k+1)
+		            x2 = self.query(h2, k+1)
+		            x = [x1, x2]
+	            else:
+	            	h1, h2 = self.generator.branch_a(h, d)
+	            	x1 = self.query(h1, k+1)
+		            x2 = self.query(h2, k+1)
+		            xa = [x1, x2]
+		            h1, h2 = self.generator.branch_b(h, d)
+	            	x1 = self.query(h1, k+1)
+		            x2 = self.query(h2, k+1)
+		            xb = [x1, x2]
+		            if not xa[0] or not xa[1]:
+		            	x = xb
+		            else:
+		            	x = max([xa, xb], key=lambda y: y[0][2] * y[1][2])
+		        if not x[0] or not x[1]:
+		        	return None
+		        return [h, x, x[0][2] * x[1][2]]
 	        else:
-	            return [None]
+	            return None
 	    else:
-	        x = self.call_vision(h, t)
-	    return [h, x]
+	        x = self.call_vision(h)
+	        if x:
+	        	x = max(x, key=lambda y: y[2])
+	        	return [h, x[0], x[2]]
+	        else:
+	        	return None
+	    	return [h, x[0], x[1]]
 
 	# full pipeline
 	def main(self, q, a):

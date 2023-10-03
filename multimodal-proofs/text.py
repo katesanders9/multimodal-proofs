@@ -43,7 +43,8 @@ class NLI(object):
         inputs = [(x[1],hypothesis) for x in inferences]
         scores = self.model.predict(inputs)
         filtered = [inferences[i] for i in range(len(scores)) if scores[i][1] > thresh]
-        return filtered
+        f_scores = [inferences[i] for i in range(len(scores)) if scores[i][1] > thresh]
+        return list(zip(filtered, f_scores))
 
 
 class Retriever(object):
@@ -102,8 +103,33 @@ class TextGen(object):
         self.h = None
         self.d = None
 
-    def declaritivize(self, q, a):
-        prompt = declaritivize_prompt.format(q=q,a=a)
+        # prompts
+        self.declarativize_prompt = declarativize_prompt
+        self.inference_preamble = inference_preamble
+        self.inference_prompt = inference_prompt
+        self.branch_a_preamble = branch_a_preamble
+        self.branch_a_prompt = branch_a_prompt
+        self.branch_b_preamble = branch_b_preamble
+        self.branch_b_prompt = branch_b_prompt
+        self.verify_i_preamble = verify_i_preamble
+        self.verify_i_prompt = verify_i_prompt
+        self.verify_b_preamble = verify_b_preamble
+        self.verify_b_prompt = verify_b_prompt
+
+        self.toq_prompt = toq_prompt
+
+    def update_gpt_param(self, param, value):
+        if param == 'temp':
+            self.model.temp = value
+        if param == 'model':
+            self.model.model = value
+        if param == 'max_tokens':
+            self.model.max_tokens = value
+        if param == 'preamble':
+            self.model.preamble = value
+
+    def declarativize(self, q, a):
+        prompt = self.declarativize_prompt.format(q=q,a=a)
         h = self.model(prompt)
         if h.startswith('"'):
             h = h[1:-1]
@@ -113,20 +139,43 @@ class TextGen(object):
         d = [remove_breaks(x) for x in d]
         d = ['(' + str(i) + ') ' + x for i, x in enumerate(d)]
         d = '\n'.join(d)
-        prompt = inference_preamble + inference_prompt.format(l=l, h=h, d=d)
+        prompt = self.inference_preamble + self.inference_prompt.format(l=l, h=h, d=d)
         s = self.model(prompt)
         return list(json.loads(s).values())
 
-    def branch(self, h, d):
+    def branch_a(self, h, d):
         d = '\n'.join(d)
-        prompt =  branch_preamble + branch_prompt.format(h=h, d=d)
+        prompt =  self.branch_a_preamble + self.branch_a_prompt.format(h=h, d=d)
+        hp = self.model(prompt)
+        return list(json.loads(hp).values())
+
+    def branch_b(self, h, d):
+        d = '\n'.join(d)
+        prompt =  self.branch_b_preamble + self.branch_b_prompt.format(h=h, d=d)
+        hp = self.model(prompt)
+        return list(json.loads(hp).values())
+
+    def verify_inf(self, d, s):
+        # s = [a, b, c, ...]
+        d = '\n'.join(d)
+        prompt =  self.verify_i_preamble + self.verify_i_prompt.format(d=d, s=s)
+        hp = self.model(prompt)
+        return list(json.loads(hp).values())
+
+    def verify_branch(self, h, s):
+        # s = [[a, b], [a, b], ...]
+        prompt =  self.verify_b_preamble + self.verify_b_prompt.format(h=h, s=s)
         hp = self.model(prompt)
         return list(json.loads(hp).values())
 
     def toq(self, h):
-        prompt = toq_prompt.format(h=h)
+        prompt = self.toq_prompt.format(h=h)
         qa = self.model(prompt)
         qa = qa.split('"')
         qa, qaa = qa[1], qa[3]
         return qa, qaa
 
+    def load_prompt(self, name):
+        with open('test_prompts.json','r') as f:
+            p = json.load(f)
+        return p[name]

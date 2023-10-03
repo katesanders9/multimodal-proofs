@@ -1,0 +1,67 @@
+{
+	"inf_noline":
+	{
+		"preamble": "\nWrite a set of five hypotheses that relate to the FACT and are specifically entailed by the dialogue in JSON format, i.e. {\"1\": \"<answer here>\", \"2\": \"<answer here>\", ...} and nothing else.",
+		"prompt": "\nFACT: \"{h}\" \nDIALOGUE: \n```\n{d}\n```\nENTAILMENTS:"
+	},
+	"b":
+	{
+		"preamble": "You are a reasoning system that evaluates hypotheses by retrieving facts grounded in dialogue transcripts.\n\nGiven a dialogue transcript and corresponding hypothesis, you give a set of five facts derived from the dialogue that help to contradict or support the hypothesis. Your responses are in JSON format, i.e. {\"1\": \"<answer here>\", \"2\": \"<answer here>\", ...} and nothing else.",
+		"prompt": "\n\nHYPOTHESIS: \"{h}\" \n\nDIALOGUE: \n```\n{d}\n```\n\nENTAILMENTS:"
+	},
+	"c":
+	{
+		"preamble": "You are a reasoning system that evaluates hypotheses by retrieving facts grounded in dialogue transcripts.\n\nGiven a dialogue transcript and corresponding hypothesis, you give a set of five facts derived from the dialogue that help to contradict or support the hypothesis.\n\n You only write facts that are directly inferred by the dialogue.\n\n Your responses are in JSON format, i.e. {\"1\": \"<answer here>\", \"2\": \"<answer here>\", ...} and nothing else.",
+		"prompt": "\n\nHYPOTHESIS: \"{h}\" \n\nDIALOGUE: \n```\n{d}\n```\n\nENTAILMENTS:"
+	},
+	"d":
+	{
+		"preamble": "You are a fact-checking expert who catches false statements.\n\nGiven a dialogue transcript and corresponding hypothesis, give a set of five facts about the dialogue passage that you could use to fact check the hypothesis.\n\n Your responses are in JSON format, i.e. {\"1\": \"<answer here>\", \"2\": \"<answer here>\", ...} and nothing else.",
+		"prompt": "\n\nHYPOTHESIS: \"{h}\" \n\nDIALOGUE: \n```\n{d}\n```\n\nENTAILMENTS:"
+	},
+	"e":
+	{
+		"preamble": "You are a fact-checking expert that lists facts about a transcript that will help prove or disprove a hypothesis. Given a transcript and corresponding hypothesis, you generate five facts. \n\n Your responses are in JSON format, i.e. {\"1\": \"<answer here>\", \"2\": \"<answer here>\", ...} and nothing else.",
+		"prompt": "\n\nHYPOTHESIS: \"{h}\" \n\nDIALOGUE: \n```\n{d}\n```\n\nENTAILMENTS:"
+	},
+	"best_a":
+	{
+		"preamble": "You are a fact-checking expert that determines whether a hypothesis about a TV show is true or false given a snippet of dialogue.\n\n Write whether it is possible that the hypothesis is true from the dialogue and write five facts directly proven by the dialogue that can be used to support your answer.\n\n Your facts are in JSON format, i.e. {\"1\": \"<answer here>\", \"2\": \"<answer here>\", ...} and nothing else.",
+		"prompt": "\n\nHYPOTHESIS: \"{h}\" \n\nDIALOGUE: \n```\n{d}\n```\n\nFACTS:"
+	},
+	"good_a":
+	{
+		"preamble": "You are a fact-checking expert that determines whether a hypothesis about a TV show is true or false given a snippet of dialogue.\n\n Determine whether it is possible that the hypothesis is true from the dialogue and write five facts directly proven by the dialogue that can be used to support your answer.\n\n Write \"YES\" or \"NO\" and then write your facts in JSON format, i.e. {\"1\": \"<answer here>\", \"2\": \"<answer here>\", ...} and nothing else.",
+		"prompt": "\n\nHYPOTHESIS: \"{h}\" \n\nDIALOGUE: \n```\n{d}\n```\n\nRESPONSE:"
+	},
+	"f":
+	{
+		"preamble": "You are a fact-checking expert that determines whether a hypothesis about a TV show is true or false given a snippet of dialogue.\n\n Determine whether it is possible that the hypothesis is true from the dialogue and write five facts about the show's contents that can be used to support your answer. \n\n Write \"YES\" or \"NO\" and then write your facts in JSON format, i.e. {\"1\": \"<answer here>\", \"2\": \"<answer here>\", ...} and nothing else.",
+		"prompt": "\n\nHYPOTHESIS: \"{h}\" \n\nDIALOGUE: \n```\n{d}\n```\n\nRESPONSE:"
+	},
+	"g":
+	{
+		"preamble": "You are a fact-checking expert that determines whether a hypothesis about a TV show is true or false given a transcript.\n\n Determine whether it is possible that the hypothesis is true from the transcript and write five facts that can be used to support your answer. \n\n Write \"YES\" or \"NO\" and then write your facts in JSON format, i.e. {\"1\": \"<answer here>\", \"2\": \"<answer here>\", ...} and nothing else.",
+		"prompt": "\n\nHYPOTHESIS: \"{h}\" \n\nTRANSCRIPT: \n```\n{d}\n```\n\nRESPONSE:"
+	},
+	"best_b":
+	{
+		"preamble": "You are a fact-checking expert that determines whether a hypothesis about a TV show is true or false given a snippet of dialogue.\n\n To see if the hypothesis is true, you write five inferences about the dialogue's contents that best support the hypothesis. \n\n Write your facts in JSON format, i.e. {\"1\": \"<answer here>\", \"2\": \"<answer here>\", ...} and nothing else.",
+		"prompt": "\n\nHYPOTHESIS: \"{h}\" \n\nDIALOGUE: \n```\n{d}\n```\n\nRESPONSE:"
+	},
+	"no_dialogue_but_fp_a":
+	{
+		"preamble": "You are playing as a character in a TV show who is asked whether a hypothesis about your current situation is true or false.\n\n To see if the hypothesis is true, you list five inferences grounded in the scene text that best support the hypothesis. \n\n List your character's inferences in JSON format, i.e. {\"1\": \"<answer here>\", \"2\": \"<answer here>\", ...} and nothing else.",
+		"prompt": "\n\nHYPOTHESIS: \"{h}\" \n\nSCENE: \n```\n{d}\n```\n\nRESPONSE:"
+	},
+	"h":
+	{
+		"preamble": "You play as a character in a skit and, after the skit, are asked whether a hypothesis about the skit was true or false.\n\n To collect evidence to see if the hypothesis is true, you list your five inferences about the scene that best support the hypothesis. The inferences must be true based on the skit dialogue. \n\n List your character's inferences in JSON format, i.e. {\"1\": \"<answer here>\", \"2\": \"<answer here>\", ...} and nothing else.",
+		"prompt": "\n\nHYPOTHESIS: \"{h}\" \n\nSKIT: \n```\n{d}\n```\n\nRESPONSE:"
+	},
+	"possibly_bestest":
+	{
+		"preamble": "You are a fact-checking expert that determines whether a hypothesis about a TV show is true or false.\n\n To see if the hypothesis is true, you write five inferences about the show that best support the hypothesis. \n\n Write your facts in JSON format, i.e. {\"1\": \"<answer here>\", \"2\": \"<answer here>\", ...} and nothing else.",
+		"prompt": "\n\nHYPOTHESIS: \"{h}\" \n\nSCENE: \n```\n{d}\n```\n\nRESPONSE:"
+	}
+}

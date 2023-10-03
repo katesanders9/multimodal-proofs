@@ -1,0 +1,62 @@
+{
+	"a1":
+	{
+		"preamble": "You are a reasoning system that searches for proofs of a hypothesis by decomposing into simpler premises.\n\nGiven a hypothesis, you give a list of possible decompositions of the hypothesis into premises such that proving the list of premises would amount to proving the hypothesis through compositional entailment.\n\nFor each of your decompositions, the premises should logically explain the deduction of the hypothesis. There should be minimal \"information loss\" between the hypothesis and the premises; you produce decompositions with strict entailment.\n\nYour output should be in serialized JSON format, i.e. [{\"premise1\": \"<answer here>\", \"premise2\": \"<answer here>\"}, ...], and nothing else.",
+		"prompt": "\n\nHYPOTHESIS: \n\"{h}\"\n\nDECOMPOSITIONS: ",
+		"notes": ""
+	},
+	"a2":
+	{
+		"preamble": "You are a reasoning system that searches for proofs of a hypothesis by decomposing into simpler premises.\n\nGiven a hypothesis, you decompose the hypothesis into two premises such that proving the two premises would amount to proving the hypothesis through compositional entailment. There should be minimal \"information loss\" between the hypothesis and the premises; you produce decompositions with strict entailment.\n\nYour output should be in serialized JSON format, i.e. [{\"premise1\": \"<answer here>\", \"premise2\": \"<answer here>\"}, ...], and nothing else.",
+		"prompt": "\n\nHYPOTHESIS: \n\"{h}\"\n\nDECOMPOSITIONS: ",
+		"notes": "Better than a1"
+	},
+	"a3":
+	{
+		"preamble": "Break down the following sentence into two, single-clause sentences.\n\nYour output should be in JSON format, i.e. {\"statement1\": \"<answer here>\", \"statement2\": \"<answer here>\"}, and nothing else.",
+		"prompt": "\n\nSENTENCE: \n\"{h}\"\n\nRESPONSE: ",
+		"notes": "Also good"
+	},
+	"a4":
+	{
+		"preamble": "Break down the following sentence into two, simpler sentences.\n\nYour output should be in JSON format, i.e. {\"statement1\": \"<answer here>\", \"statement2\": \"<answer here>\"}, and nothing else.",
+		"prompt": "\n\nSENTENCE: \n\"{h}\"\n\nRESPONSE: ",
+		"notes": "Seems to be same as a3"
+	},
+	"b1":
+	{
+		"preamble": "Textual entailment is defined as a directional relation between two text fragments, called text (t, the entailing text), and hypothesis (h, the entailed text), so that a human being, with common understanding of language and common background knowledge, can infer that h is most likely true on the basis of the content of t.\n\nWrite two facts that are entailed by the dialogue that, together, make the hypothesis true. Write your answer in JSON format, i.e. {\"1\": \"<fact 1>\", \"2\": \"<fact 2>\"} and nothing else.",
+		"prompt": "\n\nHYPOTHESIS: \"{h}\" \n\nDIALOGUE: \n```\n{d}\n```\n\nFACTS:",
+		"notes": ""
+	},
+	"b2":
+	{
+		"preamble": "Textual entailment is defined as a directional relation between two text fragments, called text (t, the entailing text), and hypothesis (h, the entailed text), so that a human being, with common understanding of language and common background knowledge, can infer that h is most likely true on the basis of the content of t.\n\nYou are a reasoning expert that determines how hypotheses about a TV show relate to a sample of supporting text.\n\nWrite two facts that are entailed by the supporting text that, together, make the hypothesis true. Write your answer in JSON format, i.e. {\"1\": \"<fact 1>\", \"2\": \"<fact 2>\"} and nothing else.",
+		"prompt": "\n\nHYPOTHESIS: \"{h}\" \n\nTEXT: \n```\n{d}\n```\n\nFACTS:",
+		"notes": "sameish as b1"
+	},
+	"b3":
+	{
+		"preamble": "You are a fact-checking expert that determines whether a statement about a TV show is true or false.\n\n To see if the hypothesis is true, you write two hypotheses about the show that, together, would make the statement true. Write your answer in JSON format, i.e. {\"1\": \"<fact 1>\", \"2\": \"<fact 2>\"} and nothing else.",
+		"prompt": "\n\nSTATEMENT: \"{h}\" \n\nSCENE: \n```\n{d}\n```\n\nHYPOTHESES:",
+		"notes": "might be rlly fuckign ood idk"
+	},
+	"b4":
+	{
+		"preamble": "You are a fact-checking expert that determines whether a statement about a TV show is true or false.\n\n To see if the hypothesis is true, you write two hypotheses about the show that, together, would make the statement true.\n\nThere should be minimal information loss between the statement and the hypotheses - if the two hypotheses are true, then the statement must be true.\n\nWrite your answer in JSON format, i.e. {\"1\": \"<fact 1>\", \"2\": \"<fact 2>\"} and nothing else.",
+		"prompt": "\n\nSTATEMENT: \"{h}\" \n\nSCENE: \n```\n{d}\n```\n\nHYPOTHESES:",
+		"notes": "might be rlly fuckign ood idk"
+	},
+	"possibly_bestest":
+	{
+		"preamble": "You are a fact-checking expert that determines whether a hypothesis about a TV show is true or false.\n\n To see if the hypothesis is true, you write five inferences about the show that best support the hypothesis. \n\n Write your facts in JSON format, i.e. {\"1\": \"<answer here>\", \"2\": \"<answer here>\", ...} and nothing else.",
+		"prompt": "\n\nHYPOTHESIS: \"{h}\" \n\nSCENE: \n```\n{d}\n```\n\nRESPONSE:"
+	},
+	"c1":
+	{
+		"preamble": "Textual entailment is defined as a directional relation between two text fragments, called text (t, the entailing text), and hypothesis (h, the entailed text), so that a human being, with common understanding of language and common background knowledge, can infer that h is most likely true on the basis of the content of t.\n\nYou are a reasoning expert that determines whether two STATEMENTS, together, entail the CLAIM, i.e., if the two statements are true, then the claim must be true. You only give the label \"ENTAILMENT\" if there is no information loss between the statements and the claim. Given the STATEMENTS and CLAIM, answer ENTAILMENT or NOT ENTAILMENT.",
+		"prompt": "\n\nSTATEMENT 1: \"{a}\" \n\nSTATEMENT 2: \"{b}\" \n\nCLAIM: \"{c}\" \n\nRESPONSE: ",
+		"notes": ""
+	}
+}
+

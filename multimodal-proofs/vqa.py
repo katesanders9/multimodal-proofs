@@ -171,4 +171,5 @@ class VisionModel(object):
         ims2 = self.load(people, q_names, ims, cropping=True)
         res = [[im] + self.query(qp, im) for im in ims2.values()]
         res = [x for x in res if x[1] == 'yes']
-        return max(res, key= lambda x: x[2])[0] if res else None
+        #return max(res, key= lambda x: x[2])[0] if res else None
+        return res

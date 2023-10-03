@@ -5,7 +5,7 @@ path = '/srv/local2/ksande25/NS_data/TVQA/'
 shows = {'Castle': 'castle', 'House M.D.': 'house', 'How I Met You Mother': 'met', 'The Big Bang Theory': 'bbt', "Grey's Anatomy": 'grey', 'Friends': 'friends'}
 
 # load dset
-def load_dataset():
+def load_dataset(path=path):
 	with open(path + 'tvqa_subtitles_all.jsonl', 'r') as f:
 		transcripts = [json.loads(x) for x in f][0] # 21794
 	with open(path + 'tvqa_qa_release/tvqa_train.jsonl', 'r') as f:

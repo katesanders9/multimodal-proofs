@@ -1,8 +1,8 @@
 from utils.dataset_utils import *
 
 class Dataset(object):
-	def __init__(self):
-		self.transcripts, self.train, self.val, self.test = load_dataset()
+	def __init__(self, path='/srv/local2/ksande25/NS_data/TVQA/'):
+		self.transcripts, self.train, self.val, self.test = load_dataset(path)
 
 	def set_data(self, type):
 		if type=='train':
@@ -20,8 +20,8 @@ class Dataset(object):
 
 	def load_data_sample(self, index):
 		show, clip, q, a = self.load_qa_pair(index)
-		t = self.transcript[clip]
-		return clip, q, a, t, get_dialogue(data[index], t)
+		t = self.transcripts[clip]
+		return show, clip, q, a, t, get_dialogue(self.data[index], t)
 
 	def print_data(self, index):
 		clip, q, a, t, tp = load_data_sample(self.data, self.transcript, index)
