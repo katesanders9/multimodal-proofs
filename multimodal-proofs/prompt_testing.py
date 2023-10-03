@@ -11,17 +11,17 @@ data.set_data('val')
 r = Retriever()
 
 def load(i):
-	dp = data.load_data_sample(i)
-	t = [x['text'] for x in dp[4]]
-	q = dp[2]
-	a = dp[3]
-	ans = list(data.data[i].values())[:5]
-	return q, a, ans, t
+    dp = data.load_data_sample(i)
+    t = [x['text'] for x in dp[4]]
+    q = dp[2]
+    a = dp[3]
+    ans = list(data.data[i].values())[:5]
+    return q, a, ans, t
 
 def l(i):
-	d = load(i)
-	r.set_transcript(d[3])
-	return d
+    d = load(i)
+    r.set_transcript(d[3])
+    return d
 
 def run(h,d,p1,p2):
     d = [remove_breaks(x) for x in d]
