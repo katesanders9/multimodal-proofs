@@ -16,7 +16,8 @@ class Dataset(object):
     def load_qa_pair(self, index):
         item = self.data[index]
         ans = item['a' + str(item['answer_idx'])]
-        return [shows[item['show_name']], item['vid_name'], item['q'], ans]
+        w_ans = [item['a' + str(i)] for i in range(5) if not i == item['answer_idx']]
+        return [shows[item['show_name']], item['vid_name'], item['q'], ans, w_ans]
 
     def load_data_sample(self, index):
         show, clip, q, a = self.load_qa_pair(index)

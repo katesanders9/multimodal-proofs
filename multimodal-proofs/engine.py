@@ -42,6 +42,9 @@ class Engine(object):
 
     # recursive loop
     def query(self, h, k):
+        print("DEPTH " + str(k))
+        print("-----")
+        print("Text eval...")
         x = None
         d = self.retrieval(h)
         if d:
@@ -56,6 +59,7 @@ class Engine(object):
                 x = max(x, key=lambda y: y[1])
                 return [h, x[0], x[1]]
             elif not x and k < self.max_steps - 1:
+                print("Vision eval...")
                 v = self.call_vision(h)
                 if v:
                     x = max(x, key=lambda y: y[2])
@@ -84,6 +88,7 @@ class Engine(object):
             else:
                 return None
         else:
+            print("Aborted. Vision eval...")
             x = self.call_vision(h)
             if x:
                 x = max(x, key=lambda y: y[2])
