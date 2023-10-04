@@ -20,9 +20,9 @@ class Dataset(object):
         return [shows[item['show_name']], item['vid_name'], item['q'], ans, w_ans]
 
     def load_data_sample(self, index):
-        show, clip, q, a = self.load_qa_pair(index)
+        show, clip, q, a, ans = self.load_qa_pair(index)
         t = self.transcripts[clip]
-        return show, clip, q, a, t, get_dialogue(self.data[index], t)
+        return show, clip, q, a, ans, t, get_dialogue(self.data[index], t)
 
     def print_data(self, index):
         clip, q, a, t, tp = load_data_sample(self.data, self.transcript, index)

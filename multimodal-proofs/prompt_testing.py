@@ -12,10 +12,10 @@ r = Retriever()
 
 def load(i):
     dp = data.load_data_sample(i)
-    t = [x['text'] for x in dp[4]]
+    t = [x['text'] for x in dp[5]]
     q = dp[2]
     a = dp[3]
-    ans = list(data.data[i].values())[:5]
+    ans = dp[4]
     return q, a, ans, t
 
 def l(i):
@@ -25,7 +25,7 @@ def l(i):
 
 def run(h,d,p1,p2):
     d = [remove_breaks(x) for x in d]
-    d = ['(' + str(i) + ') ' + x for i, x in enumerate(d)]
+#    d = ['(' + str(i) + ') ' + x for i, x in enumerate(d)]
     d = '\n'.join(d)
     prompt = p1 + p2.format(h=h,d=d)
     s = model.model(prompt)

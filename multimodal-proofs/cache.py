@@ -16,5 +16,5 @@ class Cache(object):
         self.data[clip].append([prompt, ans])
     def save(self):
         n = len(os.listdir(path))
-        np.save(path + 'cache_' + str(n) + '.npy', self.data)
+        #np.save(path + 'cache_' + str(n) + '.npy', self.data)
         np.save(path + 'cache.npy', self.data)

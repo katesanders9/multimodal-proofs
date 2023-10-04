@@ -44,6 +44,7 @@ class GPT(object):
             )
             out = response['choices'][0]['message']['content']
             self.cache.add(self.clip, message, out)
+            self.cache.save()
             return out
 
     def check_cache(self, message):

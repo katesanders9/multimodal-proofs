@@ -2,6 +2,7 @@ import os
 import json
 from vqa import VisionModel
 from text import TextGen, NLI, Retriever, LineRetriever, RetrieverBM25
+from utils.text_utils import *
 
 
 os.environ['TRANSFORMERS_CACHE'] = '/srv/local1/ksande25/cache/huggingface'
@@ -9,7 +10,7 @@ path = '/srv/local2/ksande25/NS_data/TVQA/'
 
 class Engine(object):
 
-    def __init__(self, max_steps=3):
+    def __init__(self, max_steps=3, temp=0.2):
         self.cache = []
         with open(path + 'tvqa_subtitles_all.jsonl', 'r') as f:
             self.transcripts = [json.loads(x) for x in f][0]
@@ -19,7 +20,7 @@ class Engine(object):
         self.line_retrieval = LineRetriever(2)
         self.bm25 = RetrieverBM25()
         self.nli = NLI()
-        self.generator = TextGen(temp=0.2)
+        self.generator = TextGen(temp=temp)
 
         self.show = None
         self.clip = None
