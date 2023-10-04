@@ -101,6 +101,6 @@ class Engine(object):
 
     # full pipeline
     def main(self, q, a):
-        h = self.generator.declaritivize(q, a)
+        h = self.generator.declarativize(q, a)
         proof = self.query(h, 0)
         return proof
