@@ -71,6 +71,8 @@ class VisionModel(object):
         self.path = '/srv/local2/ksande25/NS_data/TVQA/frames/frames_hq/'
         self.rate = 2 
         self.thresh = .9
+        self.set_obj_thresh(.9)
+        self.set_char_thresh(.5)
 
     def set_clip(self, show, clip):
         self.show = show
