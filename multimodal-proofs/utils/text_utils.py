@@ -14,6 +14,7 @@ def remove_breaks(l):
     return l
 
 def q2v(q, t):
+    t = [x['text'] for x in t]
     names = [x for x in t if x.startswith('(') and ':)' in x]
     names = list(set([x[x.index('(')+1:x.index(':')].lower() for x in names]))
     ql = q.lower()

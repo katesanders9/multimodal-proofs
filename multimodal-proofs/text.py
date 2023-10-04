@@ -159,13 +159,16 @@ class TextGen(object):
             h = h[1:-1]
         return h
 
-    def inference(self, h, d):
+    def inference(self, h, d, remove_one=False):
         d = [remove_breaks(x) for x in d]
         #d = ['(' + str(i) + ') ' + x for i, x in enumerate(d)]
         d = '\n'.join(d)
         prompt = self.inference_preamble + self.inference_prompt.format(h=h, d=d)
         s = self.model(prompt)
-        return list(json.loads(s).values())[1:]
+        if remove_one:
+            return list(json.loads(s).values())[1:]
+        else:
+            return list(json.loads(s).values())
 
     def branch_a(self, h, d):
         d = '\n'.join(d)
