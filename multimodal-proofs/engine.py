@@ -33,6 +33,9 @@ class Engine(object):
         self.retrieval.set_transcript([x['text'] for x in self.t])
         self.line_retrieval.set_transcript([x['text'] for x in self.t])
 
+    def save_cache(self):
+        self.generator.model.cache.save()
+
     # call vision
     def call_vision(self, h):
         q, qa = self.generator.toq(h)

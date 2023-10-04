@@ -6,31 +6,47 @@ from sentence_transformers import CrossEncoder
 from rank_bm25 import BM25Okapi
 from prompts import *
 from utils.text_utils import *
+from cache import Cache
 
 class GPT(object):
 
-    def __init__(self, temp=0.5, model="gpt-3.5-turbo", max_tokens=1000, preamble=[]):
+    def __init__(self, temp=0.5, model="gpt-3.5-turbo", max_tokens=1000, preamble=[], cache_path='/srv/local2/ksande25/NS_data/TVQA/cache/'):
         with open('keys.txt', 'r') as f:
             self.key = f.read().strip()
         self.temp = temp
         self.model = model
         self.max_tokens = max_tokens
         self.preamble = preamble
+        self.cache = Cache(cache_path)
         self.set_key()
 
     def set_key(self):
         openai.api_key = self.key
 
-    def __call__(self, message):
-        response = openai.ChatCompletion.create(
-          model = self.model,
-          temperature = self.temp,
-          max_tokens = self.max_tokens,
-          messages = self.preamble + [
-            {"role": "user", "content": message}
-          ]
-        )
-        return response['choices'][0]['message']['content']
+    def __call__(self, clip, message):
+        c = self.check_cache(clip, message)
+        if c:
+            return c
+        else:
+            response = openai.ChatCompletion.create(
+              model = self.model,
+              temperature = self.temp,
+              max_tokens = self.max_tokens,
+              messages = self.preamble + [
+                {"role": "user", "content": message}
+              ]
+            )
+            out = response['choices'][0]['message']['content']
+            self.cache.add(clip, message, out)
+            return out
+
+    def check_cache(self, clip, message):
+        if not clip in self.cache.keys():
+            return None
+        elif message in [x[0] for x in self.cache[clip]]:
+            return [m[1] for m in self.cache[clip] if m[0] == message][0]
+        else:
+            return None
 
 
 class NLI(object):
