@@ -46,11 +46,11 @@ class GPT(object):
             self.cache.add(self.clip, message, out)
             return out
 
-    def check_cache(self, clip, message):
-        if not clip in self.cache.keys():
+    def check_cache(self, message):
+        if not self.clip in self.cache.data.keys():
             return None
-        elif message in [x[0] for x in self.cache[clip]]:
-            return [m[1] for m in self.cache[clip] if m[0] == message][0]
+        elif message in [x[0] for x in self.cache.data[self.clip]]:
+            return [m[1] for m in self.cache.data[self.clip] if m[0] == message][0]
         else:
             return None
 
@@ -63,9 +63,9 @@ class NLI(object):
         if not inferences:
             return []
         inputs = [(x[1],hypothesis) for x in inferences]
-        scores = self.model.predict(inputs)
-        filtered = [inferences[i] for i in range(len(scores)) if scores[i][1] > thresh]
-        f_scores = [inferences[i] for i in range(len(scores)) if scores[i][1] > thresh]
+        scores = [s[1] for s in self.model.predict(inputs)]
+        filtered = [inferences[i] for i in range(len(scores)) if scores[i] > thresh]
+        f_scores = [scores[i] for i in range(len(scores)) if scores[i] > thresh]
         return list(zip(filtered, f_scores))
 
 
@@ -127,8 +127,8 @@ class TextGen(object):
 
         # prompts
         self.declarativize_prompt = declarativize_prompt
-        self.inference_preamble = inference_preamble
-        self.inference_prompt = inference_prompt
+        self.inference_preamble = inference_preamble_0
+        self.inference_prompt = inference_prompt_0
         self.branch_a_preamble = branch_a_preamble
         self.branch_a_prompt = branch_a_prompt
         self.branch_b_preamble = branch_b_preamble
@@ -139,6 +139,7 @@ class TextGen(object):
         self.verify_b_prompt = verify_b_prompt
 
         self.toq_prompt = toq_prompt
+        self.toq_preamble = toq_preamble
 
     def update_gpt_param(self, param, value):
         if param == 'temp':
@@ -157,13 +158,13 @@ class TextGen(object):
             h = h[1:-1]
         return h
 
-    def inference(self, h, d, l):
+    def inference(self, h, d):
         d = [remove_breaks(x) for x in d]
-        d = ['(' + str(i) + ') ' + x for i, x in enumerate(d)]
+        #d = ['(' + str(i) + ') ' + x for i, x in enumerate(d)]
         d = '\n'.join(d)
-        prompt = self.inference_preamble + self.inference_prompt.format(l=l, h=h, d=d)
+        prompt = self.inference_preamble + self.inference_prompt.format(h=h, d=d)
         s = self.model(prompt)
-        return list(json.loads(s).values())
+        return list(json.loads(s).values())[1:]
 
     def branch_a(self, h, d):
         d = '\n'.join(d)
@@ -191,11 +192,9 @@ class TextGen(object):
         return list(json.loads(hp).values())
 
     def toq(self, h):
-        prompt = self.toq_prompt.format(h=h)
+        prompt = self.toq_preamble + self.toq_prompt.format(h=h)
         qa = self.model(prompt)
-        qa = qa.split('"')
-        qa, qaa = qa[1], qa[3]
-        return qa, qaa
+        return list(json.loads(qa).values())
 
     def load_prompt(self, name):
         with open('test_prompts.json','r') as f:

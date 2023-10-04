@@ -41,7 +41,7 @@ RESPONSE:
 """
 '''
 
-inference_preamble = """
+inference_preamble_0 = """
 You are a fact-checking expert that determines whether a hypothesis about a TV show is true or false.
 
 To see if the hypothesis is true, you write five inferences about the show that best support the hypothesis.
@@ -49,9 +49,27 @@ To see if the hypothesis is true, you write five inferences about the show that 
 Write your facts in JSON format, i.e. {\"1\": \"<answer here>\", \"2\": \"<answer here>\", ...} and nothing else.
 """
 
-inference_prompt = """
+inference_prompt_0 = """
 \nHYPOTHESIS: \"{h}\" 
 SCENE: 
+```
+{d}
+```
+RESPONSE:
+"""
+
+
+inference_preamble_1 = """
+You are a fact-checking expert that determines whether a hypothesis about a TV show is true or false given a snippet of dialogue.
+
+Write whether it is possible that the hypothesis is true from the dialogue and write five facts directly proven by the dialogue that can be used to support your answer.
+
+Your facts are in JSON format, i.e. {"ans": "<YES or NO>", "1": "<fact here>", "2": "<fact here>", ...} and nothing else.
+"""
+
+inference_prompt_1 = """
+\nHYPOTHESIS: \"{h}\" 
+DIALOGUE: 
 ```
 {d}
 ```
@@ -133,8 +151,10 @@ DIALOGUE:
 FACTS:
 """
 
+toq_preamble = """
+Convert the following statement into a "yes" or "no" question, and then rewrite the question with the names replaced with "person" or "people". Write your answer in JSON format, i.e. {"Q1": "<question>", "Q2": "<rewritten question>"} and nothing else.
+"""
 toq_prompt = """
-Convert the following statement into a "yes" or "no" question, and then rewrite the question with the names replaced with "person" or "people".
 STATEMENT: "{h}"
 QUESTION: 
 """

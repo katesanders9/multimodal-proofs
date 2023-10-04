@@ -54,7 +54,7 @@ class Engine(object):
         d = self.retrieval(h)
         if d:
             s, x = self.cache, self.nli(self.cache, h)
-            c = [(d[line],i) for i in self.generator.inference(h, d)]
+            c = [(d,i) for i in self.generator.inference(h, d)]
             s += c
             self.cache += c
             x += self.nli(s, h)
