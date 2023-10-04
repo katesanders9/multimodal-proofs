@@ -27,6 +27,7 @@ class Engine(object):
     def set_clip(self, show, clip):
         self.show = show
         self.clip = clip
+        self.generator.model.set_clip(clip)
         self.vision.set_clip(show, clip)
         self.t = self.transcripts[clip]
         self.bm25.set_transcript([x['text'] for x in self.t])

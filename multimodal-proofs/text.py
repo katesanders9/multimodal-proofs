@@ -19,13 +19,17 @@ class GPT(object):
         self.preamble = preamble
         self.cache = Cache(cache_path)
         self.count = 0
+        self.clip = None
         self.set_key()
 
     def set_key(self):
         openai.api_key = self.key
 
-    def __call__(self, clip, message):
-        c = self.check_cache(clip, message)
+    def set_clip(self, clip):
+        self.clip = clip
+
+    def __call__(self, message):
+        c = self.check_cache(message)
         if c:
             return c
         else:
@@ -39,7 +43,7 @@ class GPT(object):
               ]
             )
             out = response['choices'][0]['message']['content']
-            self.cache.add(clip, message, out)
+            self.cache.add(self.clip, message, out)
             return out
 
     def check_cache(self, clip, message):
