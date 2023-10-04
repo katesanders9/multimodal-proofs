@@ -46,18 +46,17 @@ class Engine(object):
     # recursive loop
     def query(self, h, k):
         print("DEPTH " + str(k))
+        print("H: " + h)
         print("-----")
         print("Text eval...")
         x = None
         d = self.retrieval(h)
         if d:
-            l = self.line_retrieval(h, d)
             s, x = self.cache, self.nli(self.cache, h)
-            for line in l:
-                c = [(d[line],i) for i in self.generator.inference(h, d, line)]
-                s += c
-                self.cache += c
-                x += self.nli(s, h)
+            c = [(d[line],i) for i in self.generator.inference(h, d)]
+            s += c
+            self.cache += c
+            x += self.nli(s, h)
             if x:
                 x = max(x, key=lambda y: y[1])
                 return [h, x[0], x[1]]
@@ -67,7 +66,7 @@ class Engine(object):
                 if v:
                     x = max(x, key=lambda y: y[2])
                     return [h, x[0], x[2]]
-                if k == 0:
+                elif k == 0:
                     h1, h2 = self.generator.branch_a(h, d)
                     x1 = self.query(h1, k+1)
                     x2 = self.query(h2, k+1)

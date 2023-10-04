@@ -18,6 +18,7 @@ class GPT(object):
         self.max_tokens = max_tokens
         self.preamble = preamble
         self.cache = Cache(cache_path)
+        self.count = 0
         self.set_key()
 
     def set_key(self):
@@ -28,6 +29,7 @@ class GPT(object):
         if c:
             return c
         else:
+            self.count += 1
             response = openai.ChatCompletion.create(
               model = self.model,
               temperature = self.temp,
