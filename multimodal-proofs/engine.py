@@ -46,7 +46,7 @@ class Engine(object):
         return out
 
     # recursive loop
-    def query(self, h, k):
+    def query(self, h, q, k):
         print("DEPTH " + str(k))
         print("H: " + h)
         print("-----")
@@ -54,13 +54,15 @@ class Engine(object):
         x = None
         d = self.retrieval(h)
         if d:
-            l = self.line_retrieval(h, d)
-            s, x = self.cache, self.nli(self.cache, h)
-            for line in l:
-                c = [(d,i) for i in self.generator.inference(h, d, line)]
-                s += c
-                self.cache += c
-            x += self.nli(s, h, thresh=1.0)
+            # l = self.line_retrieval(h, d)
+            s = list(self.cache)
+            # for line in l:
+            c = [(d,i) for i in self.generator.inference(q, d)]
+            s += c
+            self.cache += c
+            x, check = self.nli(s, h, thresh=1.0, c_check=True)
+            if check:
+                return [h, None, 0]
             if x:
                 x = max(x, key=lambda y: y[1])
                 return [h, x[0], x[1] / 4.0]
@@ -71,26 +73,29 @@ class Engine(object):
                 if v:
                     x = max(x, key=lambda y: y[2])
                     return [h, x[0], x[2]]
-                elif k == 0:
-                    h1, h2 = self.generator.branch_a(h, d)
-                    x1 = self.query(h1, k+1)
-                    x2 = self.query(h2, k+1)
-                    x = [x1, x2]
+                #elif k == 0:
                 else:
                     h1, h2 = self.generator.branch_a(h, d)
-                    x1 = self.query(h1, k+1)
-                    x2 = self.query(h2, k+1)
-                    xa = [x1, x2]
-                    h1, h2 = self.generator.branch_b(h, d)
-                    x1 = self.query(h1, k+1)
-                    x2 = self.query(h2, k+1)
-                    xb = [x1, x2]
-                    if not xa[0] or not xa[1]:
-                        x = xb
-                    elif not xb[0] or not xb[1]:
-                        x = xa
-                    else:
-                        x = max([xa, xb], key=lambda y: y[0][2] * y[1][2])
+                    q1 = self.generator.toq(h1)
+                    q2 = self.generator.toq(h2)
+                    x1 = self.query(h1, q1, k+1)
+                    x2 = self.query(h2, q2, k+1)
+                    x = [x1, x2]
+                #else:
+                #    h1, h2 = self.generator.branch_a(h, d)
+                #    x1 = self.query(h1, k+1)
+                #    x2 = self.query(h2, k+1)
+                #    xa = [x1, x2]
+                #    h1, h2 = self.generator.branch_b(h, d)
+                #    x1 = self.query(h1, k+1)
+                #    x2 = self.query(h2, k+1)
+                #    xb = [x1, x2]
+                #    if not xa[0] or not xa[1]:
+                #        x = xb
+                #    elif not xb[0] or not xb[1]:
+                #        x = xa
+                #    else:
+                #        x = max([xa, xb], key=lambda y: y[0][2] * y[1][2])
                 if not x[0] or not x[1]:
                     return [h, x, 0]
                 return [h, x, x[0][2] * x[1][2]]

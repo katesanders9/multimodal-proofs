@@ -184,7 +184,7 @@ verify_inf_prompt = """
 
 
 data_inf_preamble = """
-"You are a fact-checking expert that uses evidence to answer questions about a TV show.\n\n To answer the question, you write five short facts about the scene provided that best support the hypothesis. \n\n Write your facts in JSON format, i.e. {"1": "<answer here>", "2": "<answer here>", ...} and nothing else."
+"You are a fact-checking expert that uses evidence to answer questions about a TV show.\n\n To answer the question, you write five short facts about the scene provided that help answer the question best. \n\n Write your facts in JSON format, i.e. {"1": "<answer here>", "2": "<answer here>", ...} and nothing else."
 """
 
 data_inf_prompt = """

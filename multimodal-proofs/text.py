@@ -10,7 +10,7 @@ from cache import Cache
 
 class GPT(object):
 
-    def __init__(self, temp=0.5, model="gpt-3.5-turbo", max_tokens=1000, preamble=[], cache_path='/srv/local2/ksande25/NS_data/TVQA/cache/'):
+    def __init__(self, temp=0.5, model="gpt-3.5-turbo", max_tokens=1000, preamble=[], cache_path='/srv/local2/ksande25/NS_data/TVQA/new_cache/'):
         with open('keys.txt', 'r') as f:
             self.key = f.read().strip()
         self.temp = temp
@@ -60,15 +60,20 @@ class NLI(object):
     def __init__(self):
         self.model = CrossEncoder('cross-encoder/nli-distilroberta-base')
 
-    def __call__(self, inferences, hypothesis, thresh=0):
+    def __call__(self, inferences, hypothesis, thresh=0, c_check=False):
         if not inferences:
             return []
         inputs = [(x[1],hypothesis) for x in inferences]
-        scores = [s[1] for s in self.model.predict(inputs)]
+        out = self.model.predict(inputs)
+        contras = [s[0] for s in out]
+        flags = [True if c > thresh else False for c in contras]
+        scores = [s[1] for s in out]
         filtered = [inferences[i] for i in range(len(scores)) if scores[i] > thresh]
         f_scores = [scores[i] for i in range(len(scores)) if scores[i] > thresh]
-        return list(zip(filtered, f_scores))
-
+        if c_check:
+            return list(zip(filtered, f_scores)), any(flags)
+        else:
+            return list(zip(filtered, f_scores)), False
 
 class Retriever(object):
     def __init__(self, n=6):
@@ -128,8 +133,8 @@ class TextGen(object):
 
         # prompts
         self.declarativize_prompt = declarativize_prompt
-        self.inference_preamble = inference_preamble_c
-        self.inference_prompt = inference_prompt_c
+        self.inference_preamble = data_inf_preamble #inference_preamble_c
+        self.inference_prompt = data_inf_prompt #inference_prompt_c
         self.branch_a_preamble = branch_a_preamble
         self.branch_a_prompt = branch_a_prompt
         self.branch_b_preamble = branch_b_preamble
@@ -159,13 +164,14 @@ class TextGen(object):
             h = h[1:-1]
         return h
 
-    def inference(self, h, d, l, remove_one=False):
+    def inference(self, h, d, l=0, remove_one=False):
         d = [remove_breaks(x) for x in d]
         d1 = d
         d = ['(' + str(i) + ') ' + x for i, x in enumerate(d)]
         d = '\n'.join(d)
         text = d1[l]
-        prompt = inference_preamble_z1.format(l=l, x=text) + inference_preamble_e + inference_prompt_z.format(h=h, d=d, l=l)
+        # prompt = inference_preamble_z1.format(l=l, x=text) + inference_preamble_e + inference_prompt_z.format(h=h, d=d, l=l)
+        prompt = inference_preamble + inference_prompt.format(h=h,d=d)
         s = self.model(prompt)
         if remove_one:
             return list(json.loads(s).values())[1:]
