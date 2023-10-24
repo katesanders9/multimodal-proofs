@@ -78,6 +78,7 @@ class CharacterEngine(object):
     def set_clip(self, show, clip):
         self.show = show
         self.clip = clip
+        self.model.set_clip(show, clip)
 
     def set_rate(self, rate):
         self.rate = rate 

@@ -128,8 +128,8 @@ class TextGen(object):
 
         # prompts
         self.declarativize_prompt = declarativize_prompt
-        self.inference_preamble = inference_preamble_0
-        self.inference_prompt = inference_prompt_0
+        self.inference_preamble = inference_preamble_c
+        self.inference_prompt = inference_prompt_c
         self.branch_a_preamble = branch_a_preamble
         self.branch_a_prompt = branch_a_prompt
         self.branch_b_preamble = branch_b_preamble
@@ -159,11 +159,13 @@ class TextGen(object):
             h = h[1:-1]
         return h
 
-    def inference(self, h, d, remove_one=False):
+    def inference(self, h, d, l, remove_one=False):
         d = [remove_breaks(x) for x in d]
-        #d = ['(' + str(i) + ') ' + x for i, x in enumerate(d)]
+        d1 = d
+        d = ['(' + str(i) + ') ' + x for i, x in enumerate(d)]
         d = '\n'.join(d)
-        prompt = self.inference_preamble + self.inference_prompt.format(h=h, d=d)
+        text = d1[l]
+        prompt = inference_preamble_z1.format(l=l, x=text) + inference_preamble_e + inference_prompt_z.format(h=h, d=d, l=l)
         s = self.model(prompt)
         if remove_one:
             return list(json.loads(s).values())[1:]

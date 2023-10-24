@@ -3,7 +3,8 @@ from text import TextGen
 from dataset import Dataset
 from text import Retriever
 
-path = '../../'
+#path = '../../'
+path = '/srv/local2/ksande25/NS_data/TVQA/'
 
 data = Dataset(path)
 model = TextGen()

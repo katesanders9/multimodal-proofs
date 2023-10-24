@@ -54,17 +54,20 @@ class Engine(object):
         x = None
         d = self.retrieval(h)
         if d:
+            l = self.line_retrieval(h, d)
             s, x = self.cache, self.nli(self.cache, h)
-            c = [(d,i) for i in self.generator.inference(h, d)]
-            s += c
-            self.cache += c
-            x += self.nli(s, h)
+            for line in l:
+                c = [(d,i) for i in self.generator.inference(h, d, line)]
+                s += c
+                self.cache += c
+            x += self.nli(s, h, thresh=1.0)
             if x:
                 x = max(x, key=lambda y: y[1])
-                return [h, x[0], x[1]]
+                return [h, x[0], x[1] / 4.0]
             elif not x and k < self.max_steps - 1:
-                print("Vision eval...")
-                v = self.call_vision(h)
+                #print("Vision eval...")
+                v = None
+                #v = self.call_vision(h)
                 if v:
                     x = max(x, key=lambda y: y[2])
                     return [h, x[0], x[2]]
@@ -84,21 +87,24 @@ class Engine(object):
                     xb = [x1, x2]
                     if not xa[0] or not xa[1]:
                         x = xb
+                    elif not xb[0] or not xb[1]:
+                        x = xa
                     else:
                         x = max([xa, xb], key=lambda y: y[0][2] * y[1][2])
                 if not x[0] or not x[1]:
-                    return None
+                    return [h, x, 0]
                 return [h, x, x[0][2] * x[1][2]]
             else:
                 return None
         else:
-            print("Aborted. Vision eval...")
-            x = self.call_vision(h)
+            #print("Aborted. Vision eval...")
+            #x = self.call_vision(h)
+            x = None
             if x:
                 x = max(x, key=lambda y: y[2])
                 return [h, x[0], x[2]]
             else:
-                return None
+                return [h, None, 0]
             return [h, x[0], x[1]]
 
     # full pipeline
