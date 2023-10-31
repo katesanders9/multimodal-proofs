@@ -171,7 +171,7 @@ class TextGen(object):
         d = '\n'.join(d)
         text = d1[l]
         # prompt = inference_preamble_z1.format(l=l, x=text) + inference_preamble_e + inference_prompt_z.format(h=h, d=d, l=l)
-        prompt = inference_preamble + inference_prompt.format(h=h,d=d)
+        prompt = self.inference_preamble + self.inference_prompt.format(h=h,d=d)
         s = self.model(prompt)
         if remove_one:
             return list(json.loads(s).values())[1:]

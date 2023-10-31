@@ -60,7 +60,7 @@ class Engine(object):
             c = [(d,i) for i in self.generator.inference(q, d)]
             s += c
             self.cache += c
-            x, check = self.nli(s, h, thresh=1.0, c_check=True)
+            x, check = self.nli(s, h, thresh=1.0, c_check=False)
             if check:
                 return [h, None, 0]
             if x:
@@ -76,8 +76,8 @@ class Engine(object):
                 #elif k == 0:
                 else:
                     h1, h2 = self.generator.branch_a(h, d)
-                    q1 = self.generator.toq(h1)
-                    q2 = self.generator.toq(h2)
+                    q1, _ = self.generator.toq(h1)
+                    q2, _ = self.generator.toq(h2)
                     x1 = self.query(h1, q1, k+1)
                     x2 = self.query(h2, q2, k+1)
                     x = [x1, x2]
@@ -116,5 +116,5 @@ class Engine(object):
     def main(self, q, a):
         self.cache = []
         h = self.generator.declarativize(q, a)
-        proof = self.query(h, 0)
+        proof = self.query(h, q,0)
         return proof
