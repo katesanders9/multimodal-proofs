@@ -32,6 +32,11 @@ chat_model_map = {
 }
 
 
+class LMGenerator:
+
+    def generate(self, inputs: List[dict], **gen_kwargs) -> List[List[str]]:
+        raise NotImplementedError()
+
 class OpenAIGenerator(LMGenerator):
     def __init__(self, prompt=None, model='gpt3'):
         """
@@ -286,7 +291,3 @@ class FollowupPromptOpenAIGenerator(OpenAIGenerator):
             raise NotImplementedError
         super().__init__(prompt=prompt, model=model)
 
-class LMGenerator:
-
-    def generate(self, inputs: List[dict], **gen_kwargs) -> List[List[str]]:
-        raise NotImplementedError()
